@@ -6,6 +6,7 @@ import { Crown } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface PlayerInfoProps {
   playerId?: string;
@@ -49,28 +50,33 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
   const timerProgress = (timer / TURN_DURATION) * 100;
 
   return (
-    <div className={`flex items-center gap-2 md:gap-4 ${isPlayer ? 'flex-row-reverse text-right' : ''}`}>
-      <div className="relative">
-        <Avatar className={`w-12 h-12 md:w-16 md:h-16 border-2 ${isMyTurn ? 'border-primary' : 'border-muted'}`}>
-          <AvatarImage src={userProfile?.avatarUrl} alt={userProfile?.displayName || "Avatar"} data-ai-hint="avatar" />
-          <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
-        </Avatar>
-      </div>
-      <div className="flex-1">
-        {/* Visible on medium screens and up */}
-        <div className="hidden md:block">
-            <h3 className="font-semibold text-lg truncate">{isPlayer ? 'You' : userProfile?.displayName || 'Opponent'}</h3>
-            <div className={`flex items-center gap-2 text-muted-foreground text-sm ${isPlayer ? 'justify-end' : ''}`}>
+    <div className={`flex flex-col ${isPlayer ? 'items-end' : 'items-start'}`}>
+        <div className={`flex items-center gap-2 md:gap-4 ${isPlayer ? 'flex-row-reverse' : ''}`}>
+        <div className="relative">
+            <Avatar className={cn(
+                "w-12 h-12 md:w-16 md:h-16 border-2",
+                isMyTurn ? 'border-primary' : 'border-muted'
+                )}>
+            <AvatarImage src={userProfile?.avatarUrl} alt={userProfile?.displayName || "Avatar"} data-ai-hint="avatar" />
+            <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
+        </div>
+        <div className={cn("flex-1", isPlayer ? "text-right" : "text-left")}>
+            <h3 className="font-semibold text-lg truncate hidden md:block">{isPlayer ? 'You' : userProfile?.displayName || 'Opponent'}</h3>
+            <div className={cn(
+                "flex items-center gap-2 text-muted-foreground text-sm",
+                 isPlayer ? 'justify-end' : 'justify-start',
+                 'hidden md:flex'
+                 )}>
                 <span>Pieces: 12</span>
                 <span className="flex items-center gap-1"><Crown className="w-4 h-4" /> 0</span>
             </div>
         </div>
-         {/* Timer visible on all screens */}
-         <div className={`flex items-center gap-2 ${isPlayer ? 'flex-row-reverse' : ''}`}>
-            <span className="text-sm font-mono w-6">{isMyTurn ? timer : ''}</span>
-            <Progress value={isMyTurn ? timerProgress : 0} className={`w-24 h-1.5 transition-all duration-1000 ease-linear ${isMyTurn ? '' : 'opacity-0'}`} />
-         </div>
-      </div>
+        </div>
+        <div className={`mt-2 flex items-center gap-2 w-full ${isPlayer ? 'flex-row-reverse' : ''}`}>
+            <span className="text-sm font-mono w-6 text-center">{isMyTurn ? timer : ''}</span>
+            <Progress value={isMyTurn ? timerProgress : 0} className={`w-full h-1.5 transition-all duration-1000 ease-linear ${isMyTurn ? '' : 'opacity-0'}`} />
+        </div>
     </div>
   );
 }
@@ -79,14 +85,18 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
 export function PlayerInfo({ playerId, opponentId, isMyTurn }: PlayerInfoProps) {
   return (
     <div className="w-full max-w-2xl mx-auto mb-4">
-      <div className="flex justify-between items-center p-2 bg-card rounded-lg shadow-md gap-4">
-        <PlayerDetails userId={opponentId} isPlayer={false} isMyTurn={!isMyTurn} />
+      <div className="flex justify-between items-start p-2 md:p-4 bg-card rounded-lg shadow-md gap-4">
+        <div className="w-[45%]">
+            <PlayerDetails userId={opponentId} isPlayer={false} isMyTurn={!isMyTurn} />
+        </div>
         
-        <div className="text-center">
+        <div className="text-center pt-4 md:pt-6">
             <h2 className="text-lg md:text-xl font-bold text-accent-foreground">VS</h2>
         </div>
 
-        <PlayerDetails userId={playerId} isPlayer={true} isMyTurn={isMyTurn} />
+        <div className="w-[45%]">
+            <PlayerDetails userId={playerId} isPlayer={true} isMyTurn={isMyTurn} />
+        </div>
       </div>
     </div>
   );
