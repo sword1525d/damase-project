@@ -14,15 +14,54 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Crown } from "lucide-react";
+import { useAuth, useUser, useFirestore, setDocumentNonBlocking } from "@/firebase";
+import { initiateEmailSignUp } from "@/firebase/non-blocking-login";
+import React, { useEffect, useState } from "react";
+import { doc } from "firebase/firestore";
 
 export function RegisterForm() {
   const router = useRouter();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
+
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      const userDocRef = doc(firestore, `users/${user.uid}`);
+      setDocumentNonBlocking(userDocRef, {
+        id: user.uid,
+        username: username || user.email,
+        email: user.email,
+        registrationDate: new Date().toISOString(),
+      }, { merge: true });
+
+      const userProfileDocRef = doc(firestore, `users/${user.uid}/profile`, "main");
+        setDocumentNonBlocking(userProfileDocRef, {
+            id: 'main',
+            displayName: username || user.email,
+        }, { merge: true });
+
+
+      router.push("/dashboard");
+    }
+  }, [user, isUserLoading, router, firestore, username]);
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock registration logic
-    router.push("/dashboard");
+    initiateEmailSignUp(auth, email, password);
   };
+
+  if (isUserLoading || user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <Crown className="w-16 h-16 text-primary animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <Card className="w-full max-w-sm border-2 border-border shadow-2xl">
@@ -37,15 +76,15 @@ export function RegisterForm() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" type="text" placeholder="CheckersKing123" required />
+            <Input id="username" type="text" placeholder="CheckersKing123" required value={username} onChange={e => setUsername(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="player@example.com" required />
+            <Input id="email" type="email" placeholder="player@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" required />
+            <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">

@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Crown } from 'lucide-react';
+import { updateDocumentNonBlocking, useUser } from '@/firebase';
+import type { DocumentReference } from 'firebase/firestore';
 
 type Piece = { player: 'p1' | 'p2'; isKing: boolean } | null;
 type Board = Piece[][];
@@ -19,16 +21,30 @@ const initialBoard: Board = [
   [{ player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null],
 ];
 
-export function CheckersBoard() {
-  const [board, setBoard] = useState<Board>(initialBoard);
+export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: any, gameSessionRef: DocumentReference | null }) {
+  const [board, setBoard] = useState<Board>(gameSession?.board || initialBoard);
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const { user } = useUser();
+
+  const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
+  const localPlayer = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
+
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  useEffect(() => {
+    if (gameSession?.board) {
+      setBoard(gameSession.board);
+    }
+  }, [gameSession]);
+
   const handleSquareClick = (row: number, col: number) => {
+    if (!gameSessionRef) return;
+    if (currentPlayer !== localPlayer) return; // Not your turn
+
     const clickedPiece = board[row][col];
 
     if (selectedPiece) {
@@ -38,14 +54,22 @@ export function CheckersBoard() {
         const pieceToMove = newBoard[selectedPiece.row][selectedPiece.col];
         newBoard[row][col] = pieceToMove;
         newBoard[selectedPiece.row][selectedPiece.col] = null;
-        setBoard(newBoard);
+        
+        // King me?
+        if (pieceToMove && ( (pieceToMove.player === 'p1' && row === 7) || (pieceToMove.player === 'p2' && row === 0) ) ){
+            pieceToMove.isKing = true;
+        }
+
+
+        const nextTurn = gameSession.turn === gameSession.player1Id ? gameSession.player2Id : gameSession.player1Id;
+        updateDocumentNonBlocking(gameSessionRef, { board: newBoard, turn: nextTurn });
         setSelectedPiece(null);
-      } else if (clickedPiece && clickedPiece.player === 'p2') {
+      } else if (clickedPiece && clickedPiece.player === localPlayer) {
         setSelectedPiece({ row, col });
       } else {
         setSelectedPiece(null);
       }
-    } else if (clickedPiece && clickedPiece.player === 'p2') { // Only allow selecting player 2's pieces
+    } else if (clickedPiece && clickedPiece.player === localPlayer) {
       setSelectedPiece({ row, col });
     }
   };
@@ -55,12 +79,21 @@ export function CheckersBoard() {
     const moves: Position[] = [];
     const { row, col } = selectedPiece;
     const piece = board[row][col];
-    if (piece?.player === 'p2') {
-        if (row > 0) {
-            if (col > 0 && !board[row - 1][col - 1]) moves.push({ row: row - 1, col: col - 1 });
-            if (col < 7 && !board[row - 1][col + 1]) moves.push({ row: row - 1, col: col + 1 });
+    if (!piece) return [];
+
+    const moveForward = (player: 'p1' | 'p2') => {
+        const forwardRow = player === 'p1' ? row + 1 : row - 1;
+        if (forwardRow >= 0 && forwardRow < 8) {
+            if (col > 0 && !board[forwardRow][col - 1]) moves.push({ row: forwardRow, col: col - 1 });
+            if (col < 7 && !board[forwardRow][col + 1]) moves.push({ row: forwardRow, col: col + 1 });
         }
     }
+    
+    moveForward(piece.player);
+    if(piece.isKing){
+        moveForward(piece.player === 'p1' ? 'p2' : 'p1');
+    }
+
     return moves;
   }, [selectedPiece, board]);
 
@@ -70,8 +103,10 @@ export function CheckersBoard() {
     );
   }
 
+  const isMyTurn = currentPlayer === localPlayer;
+
   return (
-    <div className="w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-card">
+    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-card transition-all", !isMyTurn && "opacity-70")}>
       <div className="grid grid-cols-8 grid-rows-8 w-full h-full bg-card">
         {board.map((row, rowIndex) =>
           row.map((piece, colIndex) => {
@@ -86,12 +121,12 @@ export function CheckersBoard() {
                 className={cn(
                   'flex items-center justify-center transition-colors duration-200',
                   isDark ? 'bg-primary/90' : 'bg-primary/20',
-                  (piece || isMovable) && 'cursor-pointer'
+                  (isMyTurn && (piece || isMovable)) && 'cursor-pointer'
                 )}
                 role="button"
                 aria-label={`Board square ${rowIndex}, ${colIndex}`}
               >
-                {isMovable && !piece && (
+                {isMyTurn && isMovable && !piece && (
                     <div className="w-1/3 h-1/3 rounded-full bg-accent/50 transition-opacity hover:bg-accent/70" />
                 )}
                 {piece && (
@@ -99,7 +134,7 @@ export function CheckersBoard() {
                     className={cn(
                       'w-[75%] h-[75%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
                       piece.player === 'p1' ? 'bg-gray-900 border-2 border-gray-700' : 'bg-gray-100 border-2 border-gray-400',
-                      isSelected && 'ring-4 ring-offset-2 ring-accent ring-offset-transparent'
+                      isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-accent ring-offset-transparent'
                     )}
                   >
                     {piece.isKing && (

@@ -3,46 +3,37 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useCollection, useFirestore, useUser, addDocumentNonBlocking, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
 import { Send, Smile } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-type Message = {
-    id: number;
-    user: 'You' | 'Opponent';
-    avatarId: 'player-avatar' | 'opponent-avatar';
-    text: string;
-};
-
-const initialMessages: Message[] = [
-    { id: 1, user: 'Opponent', avatarId: 'opponent-avatar', text: 'Good luck!' },
-    { id: 2, user: 'You', avatarId: 'player-avatar', text: 'Thanks, you too!' },
-    { id: 3, user: 'Opponent', avatarId: 'opponent-avatar', text: 'Nice move.' },
-];
-
-
 export function Chat() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const firestore = useFirestore();
+  const { user } = useUser();
+  const gameSessionId = "test-session"; // Hardcoded for now
 
-  const playerAvatar = PlaceHolderImages.find(p => p.id === 'player-avatar');
-  const opponentAvatar = PlaceHolderImages.find(p => p.id === 'opponent-avatar');
+  const messagesCollectionRef = useMemoFirebase(() => {
+    return collection(firestore, `game_sessions/${gameSessionId}/messages`);
+  }, [firestore, gameSessionId]);
+  
+  const messagesQuery = useMemoFirebase(() => {
+    if (!messagesCollectionRef) return null;
+    return query(messagesCollectionRef, orderBy("timestamp", "asc"));
+  }, [messagesCollectionRef]);
 
-  const avatars = {
-    'player-avatar': playerAvatar,
-    'opponent-avatar': opponentAvatar,
-  }
+  const { data: messages } = useCollection(messagesQuery);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if(newMessage.trim()){
-        setMessages([...messages, {
-            id: Date.now(),
-            user: 'You',
-            avatarId: 'player-avatar',
-            text: newMessage.trim()
-        }]);
+    if(newMessage.trim() && user && messagesCollectionRef){
+        addDocumentNonBlocking(messagesCollectionRef, {
+            senderId: user.uid,
+            content: newMessage.trim(),
+            timestamp: new Date(),
+        });
         setNewMessage('');
     }
   }
@@ -60,14 +51,14 @@ export function Chat() {
       </div>
       <ScrollArea className="flex-1 p-4" viewportRef={scrollAreaRef}>
         <div className="space-y-4">
-            {messages.map(msg => (
-                 <div key={msg.id} className={`flex items-start gap-3 ${msg.user === 'You' ? 'flex-row-reverse' : ''}`}>
+            {messages?.map(msg => (
+                 <div key={msg.id} className={`flex items-start gap-3 ${msg.senderId === user?.uid ? 'flex-row-reverse' : ''}`}>
                     <Avatar className="w-8 h-8">
-                        <AvatarImage src={avatars[msg.avatarId]?.imageUrl} alt={msg.user} data-ai-hint={avatars[msg.avatarId]?.imageHint} />
-                        <AvatarFallback>{msg.user.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={"https://picsum.photos/seed/1/40/40"} alt={msg.senderId} data-ai-hint={"avatar"} />
+                        <AvatarFallback>{/* Can be improved */}</AvatarFallback>
                     </Avatar>
-                    <div className={`p-3 rounded-lg max-w-[75%] shadow-sm ${msg.user === 'You' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
-                        <p className="text-sm">{msg.text}</p>
+                    <div className={`p-3 rounded-lg max-w-[75%] shadow-sm ${msg.senderId === user?.uid ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
+                        <p className="text-sm">{msg.content}</p>
                     </div>
                 </div>
             ))}
