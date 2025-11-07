@@ -106,7 +106,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const isMyTurn = currentPlayer === localPlayer;
 
   return (
-    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-amber-950 transition-all", !isMyTurn && "opacity-70")}>
+    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-neutral-800 transition-all", !isMyTurn && "opacity-70")}>
       <div className="grid grid-cols-8 grid-rows-8 w-full h-full bg-card">
         {board.map((row, rowIndex) =>
           row.map((piece, colIndex) => {
@@ -120,7 +120,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                 onClick={() => handleSquareClick(rowIndex, colIndex)}
                 className={cn(
                   'flex items-center justify-center transition-colors duration-200',
-                  isDark ? 'bg-amber-800' : 'bg-amber-100',
+                  isDark ? 'bg-black' : 'bg-white',
                   (isMyTurn && (piece || isMovable)) && 'cursor-pointer'
                 )}
                 role="button"
@@ -133,7 +133,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                   <div
                     className={cn(
                       'w-[80%] h-[80%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
-                      piece.player === 'p1' ? 'bg-black border-4 border-neutral-700' : 'bg-neutral-100 border-4 border-neutral-400',
+                      piece.player === 'p1' ? 'bg-red-600 border-4 border-red-900' : 'bg-white border-4 border-gray-400',
                       isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-blue-500 ring-offset-transparent'
                     )}
                   >
@@ -141,7 +141,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                       <Crown
                         className={cn(
                           'w-1/2 h-1/2',
-                          piece.player === 'p1' ? 'text-yellow-400' : 'text-yellow-600'
+                          piece.player === 'p1' ? 'text-yellow-300' : 'text-yellow-500'
                         )}
                       />
                     )}
