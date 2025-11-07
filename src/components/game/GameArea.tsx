@@ -23,6 +23,7 @@ export function GameArea() {
   const player2Id = gameSession?.player2Id;
 
   const opponentId = user?.uid === player1Id ? player2Id : player1Id;
+  const isMyTurn = gameSession?.turn === user?.uid;
 
   if (isLoading) {
     return <div className="flex-1 flex items-center justify-center">Loading game...</div>
@@ -30,7 +31,7 @@ export function GameArea() {
 
   return (
     <div className="flex-1 flex flex-col p-4 pt-20 md:p-6 lg:p-8 lg:pt-8 items-center justify-center">
-      <PlayerInfo playerId={user?.uid} opponentId={opponentId} />
+      <PlayerInfo playerId={user?.uid} opponentId={opponentId} isMyTurn={isMyTurn} />
       <CheckersBoard gameSession={gameSession} gameSessionRef={gameSessionRef} />
     </div>
   );
