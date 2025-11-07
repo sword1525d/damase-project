@@ -59,21 +59,13 @@ service cloud.firestore {
      * @deny (create, update, delete) - User with ID 'user_xyz' cannot create/update/delete the profile of user 'user_abc'.
      * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
-    match /users/{userId}/profile {
+    match /users/{userId}/profile/{profileId} {
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
 
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
-
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
     }
 
     /**
