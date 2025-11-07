@@ -1,3 +1,46 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "user-avatar",
+      "description": "Main user avatar in header",
+      "imageUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhdmF0YXJ8ZW58MHx8fHwxNzYyNTM0Njg5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avatar"
+    },
+    {
+      "id": "friend-1",
+      "description": "Friend 1 avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1630910561339-4e22c7150093?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxhdmF0YXIlMjBwZXJzb258ZW58MHx8fHwxNzYyNDkyNjY4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avatar person"
+    },
+    {
+      "id": "friend-2",
+      "description": "Friend 2 avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1750535135635-3783825e996c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhdmF0YXIlMjBwZXJzb258ZW58MHx8fHwxNzYyNDkyNjY4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avatar person"
+    },
+    {
+      "id": "friend-3",
+      "description": "Friend 3 avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1594616838951-c155f8d978a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhdmF0YXIlMjBwZXJzb258ZW58MHx8fHwxNzYyNDkyNjY4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avatar person"
+    },
+    {
+      "id": "friend-4",
+      "description": "Friend 4 avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1594616838951-c155f8d978a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhdmF0YXIlMjBwZXJzb258ZW58MHx8fHwxNzYyNDkyNjY4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avatar person"
+    },
+    {
+      "id": "opponent-avatar",
+      "description": "Opponent avatar in game",
+      "imageUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhdmF0YXJ8ZW58MHx8fHwxNzYyNTM0Njg5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avatar"
+    },
+    {
+      "id": "player-avatar",
+      "description": "Player avatar in game",
+      "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YXZhdGFyfGVufDB8fHx8MTc2MjUzNDY4OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avatar"
+    }
+  ]
 }

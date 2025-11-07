@@ -1,9 +1,9 @@
-import { LoginForm } from '@/components/auth/LoginForm';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 
-export default function Home() {
+export default function RegisterPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
-      <LoginForm />
+      <RegisterForm />
     </main>
   );
 }
