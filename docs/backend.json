@@ -1,0 +1,290 @@
+{
+  "entities": {
+    "UserAccount": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserAccount",
+      "type": "object",
+      "description": "Represents a user account within the CheckersVerse application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user account."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username chosen by the user.",
+          "format": "string"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "The date and time when the user registered.",
+          "format": "date-time"
+        },
+        "lastLogin": {
+          "type": "string",
+          "description": "The date and time of the user's last login.",
+          "format": "date-time"
+        },
+        "profileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserAccount 1:1 UserProfile)"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "registrationDate",
+        "profileId"
+      ]
+    },
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Stores profile information for a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name, which can be different from their username."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL of the user's avatar image.",
+          "format": "uri"
+        },
+        "bio": {
+          "type": "string",
+          "description": "A short biography or description of the user."
+        }
+      },
+      "required": [
+        "id",
+        "displayName"
+      ]
+    },
+    "Friendship": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Friendship",
+      "type": "object",
+      "description": "Represents a friendship relationship between two users.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the friendship."
+        },
+        "user1Id": {
+          "type": "string",
+          "description": "Reference to UserAccount.  The ID of the first user in the friendship. (Relationship: UserAccount N:N UserAccount via Friendship)"
+        },
+        "user2Id": {
+          "type": "string",
+          "description": "Reference to UserAccount. The ID of the second user in the friendship. (Relationship: UserAccount N:N UserAccount via Friendship)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the friendship (e.g., 'pending', 'accepted', 'declined')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the friendship was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "user1Id",
+        "user2Id",
+        "status",
+        "createdAt"
+      ]
+    },
+    "GameSession": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "GameSession",
+      "type": "object",
+      "description": "Represents a single game session between two players.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the game session."
+        },
+        "player1Id": {
+          "type": "string",
+          "description": "Reference to UserAccount. The ID of the first player. (Relationship: UserAccount 1:N GameSession)"
+        },
+        "player2Id": {
+          "type": "string",
+          "description": "Reference to UserAccount. The ID of the second player. (Relationship: UserAccount 1:N GameSession)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The date and time when the game session started.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The date and time when the game session ended.",
+          "format": "date-time"
+        },
+        "winnerId": {
+          "type": "string",
+          "description": "Reference to UserAccount. The ID of the winning player.  Null if the game ended in a draw. (Relationship: UserAccount 1:N GameSession)"
+        },
+        "moves": {
+          "type": "array",
+          "description": "Array of moves made during the game session, formatted as a string.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "player1Id",
+        "player2Id",
+        "startTime"
+      ]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "Represents a single chat message.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the chat message."
+        },
+        "senderId": {
+          "type": "string",
+          "description": "Reference to UserAccount. The ID of the user who sent the message. (Relationship: UserAccount 1:N ChatMessage)"
+        },
+        "gameSessionId": {
+          "type": "string",
+          "description": "Reference to GameSession. The ID of the game session the message belongs to. (Relationship: GameSession 1:N ChatMessage)"
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the chat message."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The date and time when the message was sent.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "senderId",
+        "gameSessionId",
+        "content",
+        "timestamp"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserAccount",
+          "schema": {
+            "$ref": "#/backend/entities/UserAccount"
+          },
+          "description": "Stores user account information. Path-based ownership is enforced using the 'userId' parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user account."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/profile",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Path-based ownership is enforced using the 'userId' parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user account."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/friendships/{friendshipId}",
+        "definition": {
+          "entityName": "Friendship",
+          "schema": {
+            "$ref": "#/backend/entities/Friendship"
+          },
+          "description": "Stores friendship relationships between users. Includes denormalized 'members' map for authorization independence.",
+          "params": [
+            {
+              "name": "friendshipId",
+              "description": "The unique identifier for the friendship."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/game_sessions/{gameSessionId}",
+        "definition": {
+          "entityName": "GameSession",
+          "schema": {
+            "$ref": "#/backend/entities/GameSession"
+          },
+          "description": "Stores game session data. Includes denormalized 'members' map for authorization independence.",
+          "params": [
+            {
+              "name": "gameSessionId",
+              "description": "The unique identifier for the game session."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/game_sessions/{gameSessionId}/messages/{messageId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": {
+            "$ref": "#/backend/entities/ChatMessage"
+          },
+          "description": "Stores chat messages associated with a specific game session.",
+          "params": [
+            {
+              "name": "gameSessionId",
+              "description": "The unique identifier for the game session."
+            },
+            {
+              "name": "messageId",
+              "description": "The unique identifier for the chat message."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support CheckersVerse's features, focusing on user accounts, friend management, real-time games, and chat. It prioritizes Authorization Independence by denormalizing relevant data, enabling secure and scalable rules. Structural segregation ensures data with different access requirements are stored in separate collections, simplifying security rules. Access modeling adheres to path-based ownership for user-owned data and membership maps for collaborative entities.\n\n*   `/users/{userId}`: Stores user account information. The `userId` parameter is used for path-based ownership, granting the user full access to their account data.\n*   `/users/{userId}/profile`: Stores user profile information, segregated under each user. The `userId` parameter ensures only the user can modify their profile data.\n*   `/friendships/{friendshipId}`: Stores friendship relationships between users. Includes `user1Id` and `user2Id` to identify the users involved, and a `status` field to track the friendship status. To ensure Authorization Independence, the document includes `members: {user1Id: true, user2Id: true}`. This enables us to secure `list` operations.\n*   `/game_sessions/{gameSessionId}`: Stores game session data. Includes `player1Id`, `player2Id` and `winnerId` to manage game participants and outcome. To ensure Authorization Independence, the document includes `members: {player1Id: true, player2Id: true}`. This enables us to secure `list` operations.\n*   `/game_sessions/{gameSessionId}/messages/{messageId}`: Stores chat messages associated with a specific game session, nested under the game session document. The `gameSessionId` parameter ensures messages are associated with the correct game. Authorization Independence is inherited from the parent. This enables us to secure `list` operations.\n\nThis structure achieves Authorization Independence by including all necessary authorization data within each document, avoiding the need for `get()` calls in security rules. It supports QAPs by segregating data based on access needs and utilizing membership maps for collaborative entities. Ownership is enforced through path-based access and validated user IDs. This model guarantees a secure, scalable, and maintainable Firestore database for CheckersVerse."
+  }
+}
