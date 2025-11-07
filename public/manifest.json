@@ -1,0 +1,28 @@
+{
+  "name": "CheckersVerse",
+  "short_name": "CheckersVerse",
+  "description": "A modern, cross-platform online checkers game.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#303030",
+  "theme_color": "#3F51B5",
+  "orientation": "portrait-primary"
+}
