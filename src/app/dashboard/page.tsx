@@ -6,9 +6,9 @@ import { MobileNav } from "@/components/game/MobileNav";
 export default function DashboardPage() {
   return (
     <div className="h-[calc(100vh-4rem)]">
-      <div className="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_350px]">
-        {/* Friends List (Left Sidebar) */}
-        <aside className="hidden lg:flex flex-col border-r bg-card/50">
+      <div className="grid h-full grid-cols-1">
+        {/* Friends List (Left Sidebar) - Hidden on desktop, available on mobile */}
+        <aside className="hidden">
           <FriendsList />
         </aside>
 
@@ -18,8 +18,8 @@ export default function DashboardPage() {
           <GameArea />
         </section>
 
-        {/* Chat (Right Sidebar) */}
-        <aside className="hidden xl:flex flex-col border-l bg-card/50">
+        {/* Chat (Right Sidebar) - Hidden on desktop, available on mobile */}
+        <aside className="hidden">
           <Chat />
         </aside>
       </div>
