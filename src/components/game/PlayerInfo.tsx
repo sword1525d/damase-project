@@ -71,6 +71,10 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
                 <span>Pieces: 12</span>
                 <span className="flex items-center gap-1"><Crown className="w-4 h-4" /> 0</span>
             </div>
+             <div className="md:hidden">
+                 <p className="text-sm">Pieces: 12</p>
+                 <p className="text-sm">Kings: 0</p>
+            </div>
         </div>
         </div>
         <div className={`mt-2 flex items-center gap-2 w-full ${isPlayer ? 'flex-row-reverse' : ''}`}>
@@ -85,18 +89,14 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
 export function PlayerInfo({ playerId, opponentId, isMyTurn }: PlayerInfoProps) {
   return (
     <div className="w-full max-w-2xl mx-auto mb-4">
-      <div className="flex justify-between items-start p-2 md:p-4 bg-card rounded-lg shadow-md gap-4">
-        <div className="w-[45%]">
-            <PlayerDetails userId={opponentId} isPlayer={false} isMyTurn={!isMyTurn} />
-        </div>
+       <div className="grid grid-cols-[1fr_auto_1fr] items-center p-2 md:p-4 bg-card rounded-lg shadow-md gap-2 md:gap-4">
+        <PlayerDetails userId={opponentId} isPlayer={false} isMyTurn={!isMyTurn} />
         
-        <div className="text-center pt-4 md:pt-6">
-            <h2 className="text-lg md:text-xl font-bold text-accent-foreground">VS</h2>
+        <div className="text-center">
+            <h2 className="text-lg md:text-xl font-bold text-accent">VS</h2>
         </div>
 
-        <div className="w-[45%]">
-            <PlayerDetails userId={playerId} isPlayer={true} isMyTurn={isMyTurn} />
-        </div>
+        <PlayerDetails userId={playerId} isPlayer={true} isMyTurn={isMyTurn} />
       </div>
     </div>
   );
