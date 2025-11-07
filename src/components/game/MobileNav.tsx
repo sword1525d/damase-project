@@ -17,7 +17,7 @@ export function MobileNav() {
                         Friends
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-[300px] bg-card/95 backdrop-blur-sm border-r">
+                <SheetContent side="left" className="p-0 pt-10 w-[300px] bg-card/95 backdrop-blur-sm border-r">
                     <VisuallyHidden>
                       <SheetTitle>Friends Panel</SheetTitle>
                       <SheetDescription>View your friends list, pending requests, and add new friends.</SheetDescription>
@@ -34,7 +34,7 @@ export function MobileNav() {
                             Chat
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="right" className="p-0 w-[320px] bg-card/95 backdrop-blur-sm border-l">
+                    <SheetContent side="right" className="p-0 pt-10 w-[320px] bg-card/95 backdrop-blur-sm border-l">
                          <VisuallyHidden>
                           <SheetTitle>Game Chat</SheetTitle>
                           <SheetDescription>Chat with your opponent during the game.</SheetDescription>
