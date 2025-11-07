@@ -1,17 +1,7 @@
 import type { Metadata } from "next";
 import Link from 'next/link';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Crown, LogOut, Settings, User } from "lucide-react";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { UserDropdown } from "@/components/auth/UserDropdown";
 
 

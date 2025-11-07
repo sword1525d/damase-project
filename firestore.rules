@@ -27,81 +27,61 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows users to read and write their own user account data.
+     * @description Allows users to read other user profiles but only write to their own.
      * @path /users/{userId}
-     * @allow (create) - User with ID 'user_abc' can create their account if request.auth.uid == 'user_abc'.
-     * @allow (get, update, delete) - User with ID 'user_abc' can read/update/delete their account if request.auth.uid == 'user_abc'.
-     * @deny (create, update, delete) - User with ID 'user_xyz' cannot create/update/delete the account of user 'user_abc'.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data.
      */
     match /users/{userId} {
-      function isOwner(userId) {
+      function isOwner() {
         return request.auth.uid == userId;
       }
 
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
-
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow read: if request.auth != null;
+      allow write: if isOwner();
     }
 
     /**
      * @description Allows users to read and write their own profile data.
      * @path /users/{userId}/profile
-     * @allow (create) - User with ID 'user_abc' can create their profile under /users/user_abc/profile if request.auth.uid == 'user_abc'.
-     * @allow (get, update, delete) - User with ID 'user_abc' can read/update/delete their profile under /users/user_abc/profile if request.auth.uid == 'user_abc'.
-     * @deny (create, update, delete) - User with ID 'user_xyz' cannot create/update/delete the profile of user 'user_abc'.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/profile/{profileId} {
-      function isOwner(userId) {
+      function isOwner() {
         return request.auth.uid == userId;
       }
-
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      
+      allow read: if request.auth != null;
+      allow write: if isOwner();
     }
 
     /**
-     * @description Allows the two users in a friendship to read friendship data, but only they can create/update/delete.
+     * @description Rules for friendships collection.
      * @path /friendships/{friendshipId}
-     * @allow (get, list) - User with ID 'user_abc' can read the friendship document if they are one of the members.
-     * @allow (create) - User with ID 'user_abc' can create a friendship document if they are one of the members. The members field on the document must include both users.
-     * @allow (update, delete) - User with ID 'user_abc' can update/delete the friendship document if they are one of the members.
-     * @deny (create, update, delete) - User with ID 'user_xyz' cannot create/update/delete a friendship document they are not a part of.
-     * @principle Enforces shared access to friendship data based on user membership.
      */
     match /friendships/{friendshipId} {
-      function isMember(friendship) {
-        return friendship.data.user1Id == request.auth.uid || friendship.data.user2Id == request.auth.uid;
+      function isMember() {
+        return request.auth.uid in resource.data.members;
+      }
+      
+      function isRequester() {
+        return request.auth.uid == request.resource.data.user1Id;
+      }
+      
+      function isValidFriendship() {
+        let data = request.resource.data;
+        return data.user1Id != data.user2Id &&
+               data.members[data.user1Id] == true &&
+               data.members[data.user2Id] == true;
       }
 
-      function isExistingMember(friendship) {
-        return isMember(friendship) && resource != null;
-      }
-
-      allow get: if isMember(resource);
-      allow list: if false;
-
-      allow create: if request.auth != null && (request.resource.data.user1Id == request.auth.uid || request.resource.data.user2Id == request.auth.uid);
-      allow update: if request.auth != null && isExistingMember(resource);
-      allow delete: if request.auth != null && isExistingMember(resource);
+      allow list: if request.auth != null && request.auth.uid == request.query.where.members[0];
+      allow get: if isMember();
+      
+      allow create: if isRequester() && isValidFriendship();
+      allow update, delete: if isMember();
     }
 
     /**
      * @description Allows the two players in a game session to read game session data and chat messages.
      * @path /game_sessions/{gameSessionId}
-     * @allow (get, list) - User with ID 'user_abc' can read the game session document if they are one of the players.
-     * @allow (create) - User with ID 'user_abc' can create a game session document if they are one of the players. The members field on the document must include both players.
-     * @allow (update, delete) - User with ID 'user_abc' can update/delete the game session document if they are one of the players.
-     * @deny (create, update, delete) - User with ID 'user_xyz' cannot create/update/delete a game session document they are not a part of.
-     * @principle Enforces shared access to game session data based on player membership.
      */
     match /game_sessions/{gameSessionId} {
       function isPlayer(gameSession) {
@@ -122,11 +102,6 @@ service cloud.firestore {
         /**
          * @description Allows the two players in a game session to read and write chat messages within that session.
          * @path /game_sessions/{gameSessionId}/messages/{messageId}
-         * @allow (get, list) - User with ID 'user_abc' can read a chat message if they are one of the players in the parent game session.
-         * @allow (create) - User with ID 'user_abc' can create a chat message if they are one of the players in the parent game session and the senderId matches their user ID.
-         * @allow (update, delete) - User with ID 'user_abc' can update/delete a chat message if they are one of the players in the parent game session and the senderId matches their user ID.
-         * @deny (create, update, delete) - User with ID 'user_xyz' cannot create/update/delete a chat message in a game session they are not a part of, or if the senderId doesn't match their user ID.
-         * @principle Enforces shared access to chat messages within a game session based on player membership and message ownership.
          */
         match /messages/{messageId} {
           function isPlayerInGame(gameSessionId) {
