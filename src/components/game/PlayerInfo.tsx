@@ -19,23 +19,23 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
   const { data: userProfile } = useDoc(userProfileRef);
 
   return (
-    <div className={`flex items-center gap-4 ${isPlayer ? 'flex-row-reverse text-right' : ''}`}>
+    <div className={`flex items-center gap-2 md:gap-4 ${isPlayer ? 'flex-row-reverse text-right' : ''}`}>
       <div className="relative">
-        <Avatar className={`w-12 h-12 md:w-16 md:h-16 border-2 ${isPlayer ? 'border-primary' : 'border-muted'}`}>
+        <Avatar className={`w-10 h-10 md:w-16 md:h-16 border-2 ${isPlayer ? 'border-primary' : 'border-muted'}`}>
           <AvatarImage src={userProfile?.avatarUrl} alt={userProfile?.displayName || "Avatar"} data-ai-hint="avatar" />
           <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
         </Avatar>
         {isPlayer && isMyTurn && (
-          <div className="absolute -bottom-1 -right-1 bg-background px-1.5 py-0.5 rounded-full text-xs font-semibold border border-primary text-primary">
+          <div className="absolute -bottom-1 -right-1 bg-background px-1 py-0.5 rounded-full text-[10px] md:text-xs font-semibold border border-primary text-primary">
               Your Turn
           </div>
         )}
       </div>
-      <div>
-        <h3 className="font-semibold text-md md:text-lg">{isPlayer ? 'You' : userProfile?.displayName || 'Opponent'}</h3>
-        <div className={`flex items-center gap-2 text-muted-foreground text-sm ${isPlayer ? 'justify-end' : ''}`}>
+      <div className="flex-1">
+        <h3 className="font-semibold text-sm md:text-lg truncate">{isPlayer ? 'You' : userProfile?.displayName || 'Opponent'}</h3>
+        <div className={`flex items-center gap-2 text-muted-foreground text-xs md:text-sm ${isPlayer ? 'justify-end' : ''}`}>
             <span>Pieces: 12</span>
-            <span className="flex items-center gap-1"><Crown className="w-4 h-4" /> 0</span>
+            <span className="flex items-center gap-1"><Crown className="w-3 h-3 md:w-4 md:h-4" /> 0</span>
         </div>
       </div>
     </div>
@@ -48,11 +48,11 @@ export function PlayerInfo({ playerId, opponentId }: PlayerInfoProps) {
 
   return (
     <div className="w-full max-w-2xl mx-auto mb-4">
-      <div className="flex justify-between items-center p-4 bg-card rounded-lg shadow-md">
+      <div className="flex flex-col sm:flex-row justify-between items-center p-2 md:p-4 bg-card rounded-lg shadow-md gap-2 sm:gap-4">
         <PlayerDetails userId={opponentId} isPlayer={false} />
         
-        <div className="text-center">
-            <h2 className="text-xl font-bold text-accent-foreground">VS</h2>
+        <div className="text-center my-1 sm:my-0">
+            <h2 className="text-lg md:text-xl font-bold text-accent-foreground">VS</h2>
         </div>
 
         <PlayerDetails userId={playerId} isPlayer={true} isMyTurn={true} />
