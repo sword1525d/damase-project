@@ -34,15 +34,16 @@ export function RegisterForm() {
       const userDocRef = doc(firestore, `users/${user.uid}`);
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
-        username: username || user.email,
+        username: username || user.displayName || user.email,
         email: user.email,
-        registrationDate: new Date().toISOString(),
+        registrationDate: user.metadata.creationTime || new Date().toISOString(),
       }, { merge: true });
 
       const userProfileDocRef = doc(firestore, `users/${user.uid}/profile`, "main");
         setDocumentNonBlocking(userProfileDocRef, {
             id: 'main',
-            displayName: username || user.email,
+            displayName: username || user.displayName || user.email,
+            avatarUrl: user.photoURL,
         }, { merge: true });
 
 
