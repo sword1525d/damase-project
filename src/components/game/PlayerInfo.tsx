@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { Crown } from "lucide-react";
+import { Circle, Crown } from "lucide-react";
 import { doc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
@@ -64,16 +64,16 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
         <div className={cn("flex-1", isPlayer ? "text-right" : "text-left")}>
             <h3 className="font-semibold text-lg truncate hidden md:block">{isPlayer ? 'You' : userProfile?.displayName || 'Opponent'}</h3>
             <div className={cn(
-                "flex items-center gap-2 text-muted-foreground text-sm",
+                "flex items-center gap-3 text-muted-foreground text-sm",
                  isPlayer ? 'justify-end' : 'justify-start',
                  'hidden md:flex'
                  )}>
-                <span>Pieces: 12</span>
+                <span className="flex items-center gap-1"><Circle className="w-4 h-4 fill-current" /> 12</span>
                 <span className="flex items-center gap-1"><Crown className="w-4 h-4" /> 0</span>
             </div>
-             <div className="md:hidden">
-                 <p className="text-sm">Pieces: 12</p>
-                 <p className="text-sm">Kings: 0</p>
+             <div className="md:hidden flex gap-2">
+                <p className="text-sm flex items-center gap-1"><Circle className="w-3 h-3 fill-current" /> 12</p>
+                <p className="text-sm flex items-center gap-1"><Crown className="w-4 h-4" /> 0</p>
             </div>
         </div>
         </div>
