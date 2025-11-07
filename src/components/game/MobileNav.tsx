@@ -1,9 +1,11 @@
 "use client"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Users } from "lucide-react";
 import { FriendsList } from "./FriendsList";
 import { Chat } from "./Chat";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+
 
 export function MobileNav() {
     return (
@@ -16,6 +18,10 @@ export function MobileNav() {
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-[300px] bg-card/95 backdrop-blur-sm border-r">
+                    <VisuallyHidden>
+                      <SheetTitle>Friends Panel</SheetTitle>
+                      <SheetDescription>View your friends list, pending requests, and add new friends.</SheetDescription>
+                    </VisuallyHidden>
                     <FriendsList />
                 </SheetContent>
             </Sheet>
@@ -29,6 +35,10 @@ export function MobileNav() {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="right" className="p-0 w-[320px] bg-card/95 backdrop-blur-sm border-l">
+                         <VisuallyHidden>
+                          <SheetTitle>Game Chat</SheetTitle>
+                          <SheetDescription>Chat with your opponent during the game.</SheetDescription>
+                        </VisuallyHidden>
                         <Chat />
                     </SheetContent>
                 </Sheet>
