@@ -134,7 +134,7 @@ service cloud.firestore {
             return game.player1Id == request.auth.uid || game.player2Id == request.auth.uid;
           }
 
-          allow read: if request.auth != null && isPlayerInGame(gameSessionId);
+          allow read: if request.auth != null;
 
           allow create: if request.auth != null && isPlayerInGame(gameSessionId) && request.resource.data.senderId == request.auth.uid;
           allow update: if request.auth != null && isPlayerInGame(gameSessionId) && request.resource.data.senderId == request.auth.uid;
