@@ -106,7 +106,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const isMyTurn = currentPlayer === localPlayer;
 
   return (
-    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-card transition-all", !isMyTurn && "opacity-70")}>
+    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-amber-950 transition-all", !isMyTurn && "opacity-70")}>
       <div className="grid grid-cols-8 grid-rows-8 w-full h-full bg-card">
         {board.map((row, rowIndex) =>
           row.map((piece, colIndex) => {
@@ -120,21 +120,21 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                 onClick={() => handleSquareClick(rowIndex, colIndex)}
                 className={cn(
                   'flex items-center justify-center transition-colors duration-200',
-                  isDark ? 'bg-primary/90' : 'bg-primary/20',
+                  isDark ? 'bg-amber-800' : 'bg-amber-100',
                   (isMyTurn && (piece || isMovable)) && 'cursor-pointer'
                 )}
                 role="button"
                 aria-label={`Board square ${rowIndex}, ${colIndex}`}
               >
                 {isMyTurn && isMovable && !piece && (
-                    <div className="w-1/3 h-1/3 rounded-full bg-accent/50 transition-opacity hover:bg-accent/70" />
+                    <div className="w-1/3 h-1/3 rounded-full bg-black/20 transition-opacity hover:bg-black/30" />
                 )}
                 {piece && (
                   <div
                     className={cn(
-                      'w-[75%] h-[75%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
-                      piece.player === 'p1' ? 'bg-gray-900 border-2 border-gray-700' : 'bg-gray-100 border-2 border-gray-400',
-                      isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-accent ring-offset-transparent'
+                      'w-[80%] h-[80%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
+                      piece.player === 'p1' ? 'bg-black border-4 border-neutral-700' : 'bg-neutral-100 border-4 border-neutral-400',
+                      isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-blue-500 ring-offset-transparent'
                     )}
                   >
                     {piece.isKing && (
