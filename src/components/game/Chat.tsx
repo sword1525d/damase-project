@@ -8,14 +8,14 @@ import { collection, query, orderBy } from "firebase/firestore";
 import { Send, Smile } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-export function Chat() {
+export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
   const [newMessage, setNewMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const firestore = useFirestore();
   const { user } = useUser();
-  const gameSessionId = "test-session"; // Hardcoded for now
 
   const messagesCollectionRef = useMemoFirebase(() => {
+    if (!gameSessionId) return null;
     return collection(firestore, `game_sessions/${gameSessionId}/messages`);
   }, [firestore, gameSessionId]);
   
@@ -43,6 +43,14 @@ export function Chat() {
         scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [messages])
+
+  if (!gameSessionId) {
+    return (
+         <div className="flex flex-col h-full items-center justify-center bg-card text-card-foreground">
+            <p className="text-muted-foreground">Select a game to see the chat.</p>
+        </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full">

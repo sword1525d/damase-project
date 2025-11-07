@@ -4,18 +4,15 @@ import { PlayerInfo } from "./PlayerInfo";
 import { CheckersBoard } from "./CheckersBoard";
 import { useFirestore, useDoc, useUser, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { useEffect, useState } from "react";
 
-export function GameArea() {
+export function GameArea({ gameId }: { gameId: string }) {
   const firestore = useFirestore();
   const { user } = useUser();
-  // For now, let's hardcode a game session ID for development
-  const gameSessionId = "test-session"; 
 
   const gameSessionRef = useMemoFirebase(() => {
-      if (!gameSessionId) return null;
-      return doc(firestore, 'game_sessions', gameSessionId);
-  }, [firestore, gameSessionId]);
+      if (!gameId) return null;
+      return doc(firestore, 'game_sessions', gameId);
+  }, [firestore, gameId]);
   
   const { data: gameSession, isLoading } = useDoc(gameSessionRef);
 
@@ -30,7 +27,7 @@ export function GameArea() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 pt-20 md:p-6 lg:p-8 lg:pt-8 items-center justify-center">
+    <div className="flex-1 flex flex-col p-4 pt-20 md:p-6 lg:p-8 items-center justify-center">
       <PlayerInfo playerId={user?.uid} opponentId={opponentId} isMyTurn={isMyTurn} />
       <CheckersBoard gameSession={gameSession} gameSessionRef={gameSessionRef} />
     </div>

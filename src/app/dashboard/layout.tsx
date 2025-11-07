@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
-import { Crown, LogOut, Settings, User } from "lucide-react";
+import { Crown } from "lucide-react";
 import { UserDropdown } from "@/components/auth/UserDropdown";
 
 
