@@ -133,7 +133,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                   <div
                     className={cn(
                       'w-[80%] h-[80%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
-                      piece.player === 'p1' ? 'bg-red-600 border-4 border-red-900' : 'bg-white border-4 border-gray-400',
+                      piece.player === 'p1' ? 'bg-yellow-900 border-4 border-yellow-950' : 'bg-white border-4 border-gray-400',
                       isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-blue-500 ring-offset-transparent'
                     )}
                   >
