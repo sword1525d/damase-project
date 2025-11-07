@@ -112,7 +112,7 @@ service cloud.firestore {
         return isPlayer(gameSession) && resource != null;
       }
 
-      allow get: if isPlayer(resource);
+      allow get: if request.auth != null;
       allow list: if false;
 
       allow create: if request.auth != null && (request.resource.data.player1Id == request.auth.uid || request.resource.data.player2Id == request.auth.uid);
@@ -129,21 +129,16 @@ service cloud.firestore {
          * @principle Enforces shared access to chat messages within a game session based on player membership and message ownership.
          */
         match /messages/{messageId} {
-          function isPlayer(gameSessionId) {
-            return get(/databases/$(database)/documents/game_sessions/$(gameSessionId)).data.player1Id == request.auth.uid
-                || get(/databases/$(database)/documents/game_sessions/$(gameSessionId)).data.player2Id == request.auth.uid;
+          function isPlayerInGame(gameSessionId) {
+            let game = get(/databases/$(database)/documents/game_sessions/$(gameSessionId)).data;
+            return game.player1Id == request.auth.uid || game.player2Id == request.auth.uid;
           }
 
-          function isExistingPlayer(gameSessionId) {
-            return isPlayer(gameSessionId) && resource != null;
-          }
+          allow read: if request.auth != null && isPlayerInGame(gameSessionId);
 
-          allow get: if request.auth != null && isPlayer(gameSessionId);
-          allow list: if request.auth != null && isPlayer(gameSessionId);
-
-          allow create: if request.auth != null && isPlayer(gameSessionId) && request.resource.data.senderId == request.auth.uid;
-          allow update: if request.auth != null && isExistingPlayer(gameSessionId) && request.resource.data.senderId == request.auth.uid;
-          allow delete: if request.auth != null && isExistingPlayer(gameSessionId) && request.resource.data.senderId == request.auth.uid;
+          allow create: if request.auth != null && isPlayerInGame(gameSessionId) && request.resource.data.senderId == request.auth.uid;
+          allow update: if request.auth != null && isPlayerInGame(gameSessionId) && request.resource.data.senderId == request.auth.uid;
+          allow delete: if request.auth != null && isPlayerInGame(gameSessionId) && request.resource.data.senderId == request.auth.uid;
         }
     }
   }
