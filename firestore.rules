@@ -25,8 +25,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+
+    // Users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /profile/{profileId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Counter for numeric IDs can be updated by any authenticated user
+    match /metadata/userCounter {
       allow read, write: if request.auth != null;
+    }
+
+    // Friendships can be read by members, created by anyone, and updated/deleted by members.
+    match /friendships/{friendshipId} {
+      allow read, update, delete: if request.auth != null && resource.data.members[request.auth.uid] == true;
+      allow create: if request.auth != null;
+    }
+    
+    // Game sessions can be managed by members.
+    match /game_sessions/{gameSessionId} {
+      allow read, update, delete: if request.auth != null && resource.data.members[request.auth.uid] == true;
+      allow create: if request.auth != null;
+
+       // Messages can be accessed by game members.
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && get(/databases/$(database)/documents/game_sessions/$(gameSessionId)).data.members[request.auth.uid] == true;
+      }
     }
   }
 }
