@@ -4,13 +4,15 @@ import { FriendsList } from "@/components/game/FriendsList";
 import { MobileNav } from "@/components/game/MobileNav";
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Lobby } from "@/components/lobby/Lobby";
 import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const [isFriendsSheetOpen, setIsFriendsSheetOpen] = useState(false);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -34,8 +36,8 @@ export default function DashboardPage() {
         </aside>
 
         <section className="flex flex-col overflow-auto relative">
-          <MobileNav />
-          <Lobby />
+          <MobileNav isFriendsSheetOpen={isFriendsSheetOpen} onFriendsSheetChange={setIsFriendsSheetOpen} />
+          <Lobby onFriendMatchClick={() => setIsFriendsSheetOpen(true)} />
         </section>
       </div>
     </div>

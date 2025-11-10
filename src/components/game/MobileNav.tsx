@@ -7,14 +7,18 @@ import { Chat } from "./Chat";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { usePathname } from "next/navigation";
 
+interface MobileNavProps {
+    isFriendsSheetOpen?: boolean;
+    onFriendsSheetChange?: (isOpen: boolean) => void;
+}
 
-export function MobileNav() {
+export function MobileNav({ isFriendsSheetOpen, onFriendsSheetChange }: MobileNavProps) {
     const pathname = usePathname();
     const isGamePage = pathname.includes('/game/');
 
     return (
         <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center lg:hidden">
-            <Sheet>
+            <Sheet open={isFriendsSheetOpen} onOpenChange={onFriendsSheetChange}>
                 <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm">
                         <Users className="w-4 h-4 mr-2" />
