@@ -4,6 +4,7 @@ import { PlayerInfo } from "./PlayerInfo";
 import { CheckersBoard } from "./CheckersBoard";
 import { useFirestore, useDoc, useUser, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { Crown } from "lucide-react";
 
 export function GameArea({ gameId }: { gameId: string }) {
   const firestore = useFirestore();
@@ -21,9 +22,29 @@ export function GameArea({ gameId }: { gameId: string }) {
 
   const opponentId = user?.uid === player1Id ? player2Id : player1Id;
   const isMyTurn = gameSession?.turn === user?.uid;
+  const isGameActive = gameSession?.status === 'active';
 
-  if (isLoading) {
-    return <div className="flex-1 flex items-center justify-center">Loading game...</div>
+  if (isLoading || !gameSession) {
+    return (
+        <div className="flex-1 flex items-center justify-center text-center p-4">
+            <div className="flex flex-col items-center gap-4">
+                <Crown className="w-12 h-12 text-primary animate-spin" />
+                <p className="text-muted-foreground">Carregando jogo...</p>
+            </div>
+      </div>
+    )
+  }
+
+  if (!isGameActive) {
+    return (
+        <div className="flex-1 flex items-center justify-center text-center p-4">
+            <div className="flex flex-col items-center gap-4">
+                <Crown className="w-12 h-12 text-primary animate-pulse" />
+                <h2 className="text-2xl font-semibold">Aguardando oponente</h2>
+                <p className="text-muted-foreground">O jogo começará assim que seu amigo aceitar o convite.</p>
+            </div>
+        </div>
+    )
   }
 
   return (
