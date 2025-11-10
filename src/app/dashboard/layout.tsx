@@ -29,7 +29,7 @@ export default function DashboardLayout({
       </header>
       <main className="flex-1">{children}</main>
       <footer className="py-4 px-8 text-center text-xs text-muted-foreground">
-        by SWORD
+        by LUCAS LIMA
       </footer>
     </div>
   );
