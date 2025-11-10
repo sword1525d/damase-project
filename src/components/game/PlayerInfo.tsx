@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +8,7 @@ import { doc } from "firebase/firestore";
 import { useEffect, useState, useMemo } from "react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
 
 interface PlayerInfoProps {
   playerId?: string;
@@ -19,7 +21,7 @@ const TURN_DURATION = 30; // 30 segundos
 function PlayerDetails({ userId, isPlayer, gameSession }: { userId?: string, isPlayer: boolean, gameSession: any }) {
   const firestore = useFirestore();
   const [timer, setTimer] = useState(TURN_DURATION);
-  const { user } = useDoc(useMemoFirebase(() => userId ? doc(firestore, `users/${userId}/profile`, 'main') : null, [firestore, userId]));
+  const { data: user } = useDoc(useMemoFirebase(() => userId ? doc(firestore, `users/${userId}/profile`, 'main') : null, [firestore, userId]));
   
   const isMyTurn = gameSession.turn === userId;
   const areBothPlayersPresent = !!(gameSession?.presentPlayers?.[gameSession.player1Id] && gameSession?.presentPlayers?.[gameSession.player2Id]);
@@ -80,6 +82,11 @@ function PlayerDetails({ userId, isPlayer, gameSession }: { userId?: string, isP
                 <AvatarImage src={user?.avatarUrl} alt={displayName} data-ai-hint="avatar" />
                 <AvatarFallback>{displayName?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
+                {user?.level && (
+                    <Badge variant="secondary" className="absolute -bottom-1 -right-1 h-6 w-6 p-0 justify-center text-xs rounded-full border-2 border-card">
+                        {user.level}
+                    </Badge>
+                )}
             </div>
             <div className={cn("flex-1", isPlayer ? "text-right" : "text-left")}>
                 <h3 className="font-semibold text-lg truncate">{displayName}</h3>

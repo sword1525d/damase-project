@@ -6,6 +6,7 @@ import { doc } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ref, onValue } from "firebase/database";
 import { useEffect, useState } from "react";
+import { Badge } from "../ui/badge";
 
 interface UserProfileBadgeProps {
     userId: string;
@@ -62,9 +63,14 @@ export function UserProfileBadge({ userId, showOnlineStatus = false }: UserProfi
                     <AvatarImage src={userProfile.avatarUrl} alt={userProfile.displayName} data-ai-hint={'avatar'} />
                     <AvatarFallback>{userProfile.displayName?.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
+                 {userProfile.level && (
+                    <Badge variant="secondary" className="absolute -bottom-1 -right-1 h-5 w-5 p-0 justify-center text-xs rounded-full border-2 border-card">
+                        {userProfile.level}
+                    </Badge>
+                )}
                 {showOnlineStatus && (
                     <span className={cn(
-                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                    "absolute bottom-0 left-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
                     statusInfo.color
                     )} />
                 )}

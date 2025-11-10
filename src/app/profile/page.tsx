@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
@@ -17,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 function StatCard({ icon, title, value }: { icon: React.ReactNode, title: string, value: number | string }) {
     return (
@@ -143,6 +145,9 @@ export default function ProfilePage() {
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                                         <ImageIcon className="w-8 h-8 text-white" />
                                     </div>
+                                    <Badge variant="default" className="absolute -bottom-2 -right-2 h-8 w-8 p-0 justify-center text-base rounded-full border-4 border-background">
+                                        {userProfile.level}
+                                    </Badge>
                                 </div>
                             </DialogTrigger>
                             <DialogContent>
@@ -216,17 +221,16 @@ export default function ProfilePage() {
                                 </Dialog>
                             </div>
                             <CardDescription className="text-muted-foreground">ID: #{userAccount.numericId}</CardDescription>
-                            <div className="flex items-center justify-center gap-2 mt-2 text-lg font-semibold text-primary">
-                                <Star className="w-5 h-5 fill-current" />
-                                <span>Nível {userProfile.level}</span>
-                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-8 px-4 md:px-6 pb-6">
                         <div>
-                            <div className="flex justify-between items-center mb-1 text-xs text-muted-foreground">
-                                <span>Progresso</span>
-                                <span>{userProfile.xp} / 100 XP</span>
+                            <div className="flex justify-between items-center mb-2">
+                                <div className="flex items-center gap-2 text-lg font-semibold text-primary">
+                                    <Star className="w-5 h-5 fill-current" />
+                                    <span>Nível {userProfile.level}</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">{userProfile.xp} / 100 XP</span>
                             </div>
                             <Progress value={xpProgress} className="h-2" />
                         </div>
@@ -260,5 +264,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    

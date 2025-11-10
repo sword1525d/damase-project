@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -14,6 +15,7 @@ import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/fireb
 import { doc } from "firebase/firestore";
 import Link from "next/link";
 import { LogOut, Settings, User as UserIcon } from "lucide-react";
+import { Badge } from "../ui/badge";
 
 export function UserDropdown() {
   const auth = useAuth();
@@ -34,11 +36,16 @@ export function UserDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" className="rounded-full">
+        <Button variant="secondary" size="icon" className="rounded-full relative">
           <Avatar className="h-8 w-8">
             <AvatarImage src={userProfile?.avatarUrl} alt={userProfile?.displayName || "Usuário"} />
             <AvatarFallback>{userProfile?.displayName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
+           {userProfile?.level && (
+            <Badge variant="default" className="absolute -bottom-1 -right-1 h-5 w-5 p-0 justify-center text-xs rounded-full">
+              {userProfile.level}
+            </Badge>
+          )}
           <span className="sr-only">Abrir menu do usuário</span>
         </Button>
       </DropdownMenuTrigger>
