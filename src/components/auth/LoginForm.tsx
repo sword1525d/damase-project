@@ -108,9 +108,9 @@ export function LoginForm() {
       <CardHeader className="text-center">
         <div className="flex justify-center items-center gap-2 mb-4">
           <Crown className="w-8 h-8 text-primary" />
-          <CardTitle className="text-3xl font-bold">CheckersVerse</CardTitle>
+          <CardTitle className="text-3xl font-bold">Dama-se</CardTitle>
         </div>
-        <CardDescription>Welcome back! Please sign in to continue.</CardDescription>
+        <CardDescription>Bem-vindo de volta! Faça login para continuar.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={handleLogin} className="space-y-4">
@@ -119,10 +119,10 @@ export function LoginForm() {
             <Input id="email" type="email" placeholder="player@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Senha</Label>
             <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Sign In</Button>
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Entrar</Button>
         </form>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -130,7 +130,7 @@ export function LoginForm() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-card px-2 text-muted-foreground">
-              Or continue with
+              Ou continue com
             </span>
           </div>
         </div>
@@ -141,9 +141,9 @@ export function LoginForm() {
       </CardContent>
       <CardFooter className="flex-col gap-4 items-center justify-center text-sm">
         <div className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            Não tem uma conta?{" "}
             <Link href="/register" className="underline text-accent-foreground hover:text-accent/90">
-                Sign up
+                Cadastre-se
             </Link>
         </div>
       </CardFooter>

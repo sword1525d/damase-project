@@ -1,28 +1,22 @@
 {
-  "name": "CheckersVerse",
-  "short_name": "CheckersVerse",
-  "description": "A modern, cross-platform online checkers game.",
-  "icons": [
-    {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "/icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
+  "name": "Dama-se",
+  "short_name": "Dama-se",
+  "description": "Um jogo de damas online moderno e multiplataforma.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#303030",
   "theme_color": "#3F51B5",
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
 }

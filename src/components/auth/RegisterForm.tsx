@@ -95,31 +95,31 @@ export function RegisterForm() {
       <CardHeader className="text-center">
         <div className="flex justify-center items-center gap-2 mb-4">
             <Crown className="w-8 h-8 text-primary" />
-            <CardTitle className="text-3xl font-bold">CheckersVerse</CardTitle>
+            <CardTitle className="text-3xl font-bold">Dama-se</CardTitle>
         </div>
-        <CardDescription>Create your account to start playing.</CardDescription>
+        <CardDescription>Crie sua conta para começar a jogar.</CardDescription>
       </CardHeader>
       <form onSubmit={handleRegister}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input id="username" type="text" placeholder="CheckersKing123" required value={username} onChange={e => setUsername(e.target.value)} />
+            <Label htmlFor="username">Usuário</Label>
+            <Input id="username" type="text" placeholder="ReiDasDamas123" required value={username} onChange={e => setUsername(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" placeholder="player@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Senha</Label>
             <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Create Account</Button>
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Criar Conta</Button>
           <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            Já tem uma conta?{" "}
             <Link href="/" className="underline text-accent-foreground hover:text-accent/90">
-              Sign in
+              Entrar
             </Link>
           </div>
         </CardFooter>
