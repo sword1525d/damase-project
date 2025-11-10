@@ -10,6 +10,32 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useMemo } from 'react';
 
+// Function to generate the initial board state as a map of maps
+const generateInitialBoard = () => {
+    const board: { [key: number]: { [key: number]: { player: 'p1' | 'p2', isKing: boolean } | null } } = {};
+    const p1Rows = [0, 1, 2];
+    const p2Rows = [5, 6, 7];
+
+    for (let row = 0; row < 8; row++) {
+        board[row] = {};
+        for (let col = 0; col < 8; col++) {
+            if ((row + col) % 2 !== 0) {
+                if (p1Rows.includes(row)) {
+                    board[row][col] = { player: 'p1', isKing: false };
+                } else if (p2Rows.includes(row)) {
+                    board[row][col] = { player: 'p2', isKing: false };
+                } else {
+                    board[row][col] = null;
+                }
+            } else {
+                board[row][col] = null;
+            }
+        }
+    }
+    return board;
+};
+
+
 export function OnlineFriends() {
     const firestore = useFirestore();
     const { user } = useUser();
@@ -55,16 +81,7 @@ export function OnlineFriends() {
             status: 'pending_invite',
             turn: user.uid,
             createdAt: serverTimestamp(),
-            board: [
-                [null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }],
-                [{ player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }, null],
-                [null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }, null, { player: 'p1', isKing: false }],
-                [null, null, null, null, null, null, null, null],
-                [null, null, null, null, null, null, null, null],
-                [{ player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null],
-                [null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }],
-                [{ player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null, { player: 'p2', isKing: false }, null],
-            ],
+            board: generateInitialBoard(),
             members: {
                 [user.uid]: true,
                 [friendId]: true,
