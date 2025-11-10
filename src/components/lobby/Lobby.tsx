@@ -57,12 +57,13 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
         
         setIsMatchmaking(true);
         const queueRef = collection(firestore, 'matchmakingQueue');
-        // Simplified query to get the oldest player in the queue.
-        const q = query(queueRef, orderBy('timestamp', 'asc'), limit(1));
+        // Query to get all players in the queue, oldest first.
+        const q = query(queueRef, orderBy('timestamp', 'asc'));
 
         try {
             const querySnapshot = await getDocs(q);
-            let opponentDoc = querySnapshot.docs.find(doc => doc.data().playerId !== user.uid);
+            // Find the first opponent in the queue who is not the current user.
+            const opponentDoc = querySnapshot.docs.find(doc => doc.data().playerId !== user.uid);
 
             if (opponentDoc) {
                 // Found an opponent
