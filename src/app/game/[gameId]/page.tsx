@@ -1,16 +1,15 @@
 "use client";
 
-import { FriendsList } from "@/components/game/FriendsList";
-import { GameArea } from "@/components/game/GameArea";
 import { Chat } from "@/components/game/Chat";
+import { GameArea } from "@/components/game/GameArea";
 import { MobileNav } from "@/components/game/MobileNav";
-import { useUser } from "@/firebase";
-import { useRouter, useParams } from "next/navigation";
-import { useEffect } from "react";
-import { Crown } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { useUser } from "@/firebase";
+import { ArrowLeft, Crown } from "lucide-react";
+import Image from 'next/image';
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function GamePage() {
   const { user, isUserLoading } = useUser();
@@ -42,7 +41,7 @@ export default function GamePage() {
             </Link>
         </Button>
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <Crown className="h-6 w-6 text-primary" />
+          <Image src="/icon.svg" alt="Dama-se logo" width={24} height={24} className="h-6 w-6" />
           <span className="text-lg whitespace-nowrap">Dama-se</span>
         </Link>
       </header>
