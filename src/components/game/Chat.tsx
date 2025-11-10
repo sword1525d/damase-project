@@ -47,7 +47,7 @@ export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
   if (!gameSessionId) {
     return (
          <div className="flex flex-col h-full items-center justify-center bg-card text-card-foreground">
-            <p className="text-muted-foreground">Select a game to see the chat.</p>
+            <p className="text-muted-foreground">Selecione um jogo para ver o chat.</p>
         </div>
     )
   }
@@ -55,7 +55,7 @@ export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
   return (
     <div className="flex flex-col h-full">
       <div className="p-4">
-        <h2 className="text-xl font-semibold">Game Chat</h2>
+        <h2 className="text-xl font-semibold">Chat da Partida</h2>
       </div>
       <ScrollArea className="flex-1 p-4" viewportRef={scrollAreaRef}>
         <div className="space-y-4">
@@ -63,7 +63,7 @@ export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
                  <div key={msg.id} className={`flex items-start gap-3 ${msg.senderId === user?.uid ? 'flex-row-reverse' : ''}`}>
                     <Avatar className="w-8 h-8">
                         <AvatarImage src={"https://picsum.photos/seed/1/40/40"} alt={msg.senderId} data-ai-hint={"avatar"} />
-                        <AvatarFallback>{/* Can be improved */}</AvatarFallback>
+                        <AvatarFallback>{/* Pode ser melhorado */}</AvatarFallback>
                     </Avatar>
                     <div className={`p-3 rounded-lg max-w-[75%] shadow-sm ${msg.senderId === user?.uid ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
                         <p className="text-sm">{msg.content}</p>
@@ -78,16 +78,16 @@ export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
             <Input 
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..." 
+                placeholder="Digite uma mensagem..." 
                 className="pr-10 bg-background" />
             <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7">
                 <Smile className="w-4 h-4 text-muted-foreground" />
-                <span className="sr-only">Add emoji</span>
+                <span className="sr-only">Adicionar emoji</span>
             </Button>
           </div>
           <Button type="submit" size="icon" disabled={!newMessage.trim()}>
             <Send className="w-4 h-4" />
-            <span className="sr-only">Send</span>
+            <span className="sr-only">Enviar</span>
           </Button>
         </form>
       </div>

@@ -38,7 +38,7 @@ export default function GamePage() {
         <Button asChild variant="ghost" size="icon" className="lg:hidden">
             <Link href="/dashboard">
                 <ArrowLeft />
-                <span className="sr-only">Voltar para o Lobby</span>
+                <span className="sr-only">Voltar para o Painel</span>
             </Link>
         </Button>
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">

@@ -8,7 +8,7 @@ export function FriendsList() {
     <div className="flex flex-col h-full">
       <div className="p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Friends</h2>
+          <h2 className="text-xl font-semibold">Amigos</h2>
           <AddFriendDialog />
         </div>
       </div>

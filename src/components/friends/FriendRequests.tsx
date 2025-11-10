@@ -39,7 +39,7 @@ export function FriendRequests() {
 
     return (
         <div className="p-2 md:p-4 space-y-2">
-            <h3 className='text-sm font-semibold text-muted-foreground px-2'>Friend Requests</h3>
+            <h3 className='text-sm font-semibold text-muted-foreground px-2'>Pedidos de Amizade</h3>
             {requests.map(req => (
                 <div key={req.id} className="flex items-center justify-between group p-2 rounded-md hover:bg-secondary">
                     <UserProfileBadge userId={req.user1Id} />

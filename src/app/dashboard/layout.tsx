@@ -5,8 +5,8 @@ import { UserDropdown } from "@/components/auth/UserDropdown";
 
 
 export const metadata: Metadata = {
-  title: "Dashboard | Dama-se",
-  description: "Seu dashboard no Dama-se.",
+  title: "Painel | Dama-se",
+  description: "Seu painel no Dama-se.",
 };
 
 export default function DashboardLayout({

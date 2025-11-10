@@ -10,15 +10,15 @@ export function Lobby() {
             <GameInvites />
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
-                    <CardTitle className="text-3xl font-bold">Game Lobby</CardTitle>
+                    <CardTitle className="text-3xl font-bold">Lobby de Jogos</CardTitle>
                     <CardDescription>Escolha como você quer jogar.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Button className="w-full h-16 text-lg" size="lg">
                         <Swords className="mr-2 h-6 w-6" />
-                        Find Random Match
+                        Encontrar Partida Aleatória
                     </Button>
-                    <p className="text-center text-sm text-muted-foreground">Ou convide um amigo da lista na esquerda.</p>
+                    <p className="text-center text-sm text-muted-foreground">Ou convide um amigo da lista à esquerda.</p>
                 </CardContent>
             </Card>
         </div>

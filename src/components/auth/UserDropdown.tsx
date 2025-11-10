@@ -36,27 +36,27 @@ export function UserDropdown() {
       <DropdownMenuTrigger asChild>
         <Button variant="secondary" size="icon" className="rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={userProfile?.avatarUrl} alt={userProfile?.displayName || "User"} />
+            <AvatarImage src={userProfile?.avatarUrl} alt={userProfile?.displayName || "Usuário"} />
             <AvatarFallback>{userProfile?.displayName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
-          <span className="sr-only">Toggle user menu</span>
+          <span className="sr-only">Abrir menu do usuário</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
           <UserIcon className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+          <span>Perfil</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+          <span>Configurações</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
+            <span>Sair</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

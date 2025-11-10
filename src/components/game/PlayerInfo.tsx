@@ -14,7 +14,7 @@ interface PlayerInfoProps {
   isMyTurn?: boolean;
 }
 
-const TURN_DURATION = 30; // 30 seconds
+const TURN_DURATION = 30; // 30 segundos
 
 function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlayer: boolean, isMyTurn?: boolean }) {
   const firestore = useFirestore();
@@ -34,7 +34,7 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
         setTimer(prev => {
           if (prev <= 1) {
             clearInterval(interval);
-            // Handle turn timeout here
+            // Lidar com o tempo de turno esgotado aqui
             return 0;
           }
           return prev - 1;
@@ -62,7 +62,7 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
                 </Avatar>
             </div>
             <div className={cn("flex-1", isPlayer ? "text-right" : "text-left")}>
-                <h3 className="font-semibold text-lg truncate hidden md:block">{isPlayer ? 'You' : userProfile?.displayName || 'Opponent'}</h3>
+                <h3 className="font-semibold text-lg truncate hidden md:block">{isPlayer ? 'Você' : userProfile?.displayName || 'Oponente'}</h3>
                 <div className={cn(
                     "flex items-center gap-3 text-muted-foreground text-sm",
                      isPlayer ? 'justify-end' : 'justify-start',

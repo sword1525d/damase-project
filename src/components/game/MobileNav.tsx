@@ -18,13 +18,13 @@ export function MobileNav() {
                 <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm">
                         <Users className="w-4 h-4 mr-2" />
-                        Friends
+                        Amigos
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 pt-10 w-[300px] bg-card/95 backdrop-blur-sm border-r">
                     <VisuallyHidden>
-                      <SheetTitle>Friends Panel</SheetTitle>
-                      <SheetDescription>View your friends list, pending requests, and add new friends.</SheetDescription>
+                      <SheetTitle>Painel de Amigos</SheetTitle>
+                      <SheetDescription>Veja sua lista de amigos, pedidos pendentes e adicione novos amigos.</SheetDescription>
                     </VisuallyHidden>
                     <FriendsList />
                 </SheetContent>
@@ -41,10 +41,10 @@ export function MobileNav() {
                         </SheetTrigger>
                         <SheetContent side="right" className="p-0 pt-10 w-[320px] bg-card/95 backdrop-blur-sm border-l">
                              <VisuallyHidden>
-                              <SheetTitle>Game Chat</SheetTitle>
-                              <SheetDescription>Chat with your opponent during the game.</SheetDescription>
+                              <SheetTitle>Chat da Partida</SheetTitle>
+                              <SheetDescription>Converse com seu oponente durante o jogo.</SheetDescription>
                             </VisuallyHidden>
-                            <Chat />
+                            <Chat gameSessionId={null} />
                         </SheetContent>
                     </Sheet>
                 </div>

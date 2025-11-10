@@ -107,15 +107,15 @@ export function OnlineFriends() {
 
     return (
          <div className="p-2 md:p-4 space-y-1">
-            <h3 className='text-sm font-semibold text-muted-foreground px-2 mb-2'>Friends</h3>
-            {isLoading && <p className='text-xs text-muted-foreground px-2'>Loading friends...</p>}
-            {friendIds && friendIds.length === 0 && !isLoading && <p className='text-xs text-muted-foreground px-2'>No friends yet. Add some!</p>}
+            <h3 className='text-sm font-semibold text-muted-foreground px-2 mb-2'>Amigos</h3>
+            {isLoading && <p className='text-xs text-muted-foreground px-2'>Carregando amigos...</p>}
+            {friendIds && friendIds.length === 0 && !isLoading && <p className='text-xs text-muted-foreground px-2'>Nenhum amigo ainda. Adicione alguns!</p>}
             {friendIds?.map(friendId => (
                 <div key={friendId} className="flex items-center justify-between group p-2 rounded-md hover:bg-secondary">
                     <UserProfileBadge userId={friendId} showOnlineStatus={true} />
                     <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleInvite(friendId)}>
                         <Gamepad2 className="w-4 h-4 mr-2" />
-                        Invite
+                        Convidar
                     </Button>
                 </div>
             ))}

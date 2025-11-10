@@ -37,17 +37,17 @@ export function AddFriendDialog() {
     try {
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) {
-        setError("User not found with this ID.");
+        setError("Usuário não encontrado com este ID.");
       } else {
         const foundUser = querySnapshot.docs[0].data();
         if (foundUser.id === user?.uid) {
-            setError("You can't add yourself as a friend.");
+            setError("Você não pode adicionar a si mesmo como amigo.");
             return;
         }
         setSearchResult({ id: querySnapshot.docs[0].id, ...foundUser });
       }
     } catch (e) {
-      setError("Error searching for user.");
+      setError("Erro ao procurar por usuário.");
       console.error(e);
     }
   };
@@ -64,7 +64,7 @@ export function AddFriendDialog() {
     const [snapshot1, snapshot2] = await Promise.all([getDocs(existingQuery1), getDocs(existingQuery2)]);
 
     if(!snapshot1.empty || !snapshot2.empty){
-        setError("A friendship or friend request already exists with this user.");
+        setError("Uma amizade ou pedido de amizade já existe com este usuário.");
         return;
     }
 
@@ -81,12 +81,12 @@ export function AddFriendDialog() {
 
     addDocumentNonBlocking(friendshipsRef, newFriendship)
         .then(() => {
-            setSuccess(`Friend request sent to ${searchResult.username}!`);
+            setSuccess(`Pedido de amizade enviado para ${searchResult.username}!`);
             setSearchResult(null);
             setFriendId('');
         })
         .catch(() => {
-            setError("Failed to send friend request.");
+            setError("Falha ao enviar pedido de amizade.");
         })
   };
 
@@ -100,22 +100,22 @@ export function AddFriendDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] pt-12">
         <DialogHeader>
-          <DialogTitle>Add Friend</DialogTitle>
+          <DialogTitle>Adicionar Amigo</DialogTitle>
           <DialogDescription>
-            Enter the 6-digit ID of the person you want to add.
+            Digite o ID de 6 dígitos da pessoa que você deseja adicionar.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="username" className="text-right">
-              User ID
+              ID de Usuário
             </Label>
             <Input 
               id="friendId" 
               value={friendId} 
               onChange={(e) => setFriendId(e.target.value)} 
               className="col-span-3"
-              placeholder="e.g. 100001"
+              placeholder="ex: 100001"
             />
           </div>
         </div>
@@ -126,12 +126,12 @@ export function AddFriendDialog() {
         {searchResult && (
           <div className="flex justify-between items-center p-2 border rounded-md">
             <span>{searchResult.username} (#{searchResult.numericId})</span>
-            <Button size="sm" onClick={handleAddFriend}>Add</Button>
+            <Button size="sm" onClick={handleAddFriend}>Adicionar</Button>
           </div>
         )}
 
         <DialogFooter>
-          <Button onClick={handleSearch} type="button">Search</Button>
+          <Button onClick={handleSearch} type="button">Buscar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
