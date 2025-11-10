@@ -104,7 +104,7 @@ function PlayerDetails({ userId, isPlayer, gameSession }: { userId?: string, isP
                 )}
             </div>
             <div className={cn("flex-1", isPlayer ? "text-right" : "text-left")}>
-                <h3 className="font-semibold text-lg truncate">{displayName}</h3>
+                <h3 className="font-semibold text-lg truncate hidden md:block">{displayName}</h3>
                 <div className={cn(
                     "flex items-center gap-3 text-muted-foreground text-sm",
                      isPlayer ? 'justify-end' : 'justify-start',
@@ -129,7 +129,7 @@ export function PlayerInfo({ playerId, opponentId, gameSession }: PlayerInfoProp
        <div className="grid grid-cols-[1fr_auto_1fr] items-start p-2 md:p-4 bg-card rounded-lg shadow-md gap-2 md:gap-4">
         <PlayerDetails userId={opponentId} isPlayer={false} gameSession={gameSession} />
         
-        <div className="text-center pt-8">
+        <div className="text-center pt-4 md:pt-8">
             <h2 className="text-lg md:text-xl font-bold text-accent">VS</h2>
         </div>
 
