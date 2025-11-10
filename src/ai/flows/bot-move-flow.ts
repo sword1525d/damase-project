@@ -29,6 +29,11 @@ const BotMoveInputSchema = z.object({
 });
 export type BotMoveInput = z.infer<typeof BotMoveInputSchema>;
 
+// This is the schema for the prompt itself, which takes a stringified board
+const PromptInputSchema = BotMoveInputSchema.extend({
+    boardString: z.string().describe("The current state of the checkers board as a JSON string."),
+});
+
 const BotMoveOutputSchema = z.object({
   bestMove: MoveSchema.describe('The best move the bot has decided to make from the list of possible moves.'),
 });
@@ -40,7 +45,7 @@ export async function getBotMove(input: BotMoveInput): Promise<BotMoveOutput> {
 
 const botMovePrompt = ai.definePrompt({
     name: 'checkersBotMovePrompt',
-    input: { schema: BotMoveInputSchema },
+    input: { schema: PromptInputSchema },
     output: { schema: BotMoveOutputSchema },
     prompt: `
         You are an expert Checkers (Draughts) player AI. Your goal is to win the game.
@@ -52,7 +57,7 @@ const botMovePrompt = ai.definePrompt({
 
         Current Board State:
         \`\`\`json
-        {{{json stringify=board}}}
+        {{boardString}}
         \`\`\`
 
         Here are the valid moves for the piece at ({{botPiecePosition.row}}, {{botPiecePosition.col}}):
@@ -88,7 +93,13 @@ const botMoveFlow = ai.defineFlow(
         return { bestMove: input.possibleMoves[0] };
     }
 
-    const { output } = await botMovePrompt(input);
+    // Manually stringify the board and pass it to the prompt.
+    const promptInput = {
+        ...input,
+        boardString: JSON.stringify(input.board, null, 2),
+    };
+
+    const { output } = await botMovePrompt(promptInput);
     return output!;
   }
 );
