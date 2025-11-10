@@ -8,7 +8,7 @@ import { RecentGames } from "./RecentGames";
 export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void }) {
     
     return (
-        <div className="flex flex-col items-center justify-center h-full p-4 relative">
+        <div className="flex flex-col items-center justify-center h-full p-4 md:p-8 relative">
             <GameInvites />
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
