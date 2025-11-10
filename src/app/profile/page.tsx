@@ -40,7 +40,7 @@ export default function ProfilePage() {
 
     const userProfileRef = useMemoFirebase(() => {
         if (!user) return null;
-        return doc(firestore, `users/${user.uid}/profile/main`);
+        return doc(firestore, `users/${user.uid}/profile`, "main");
     }, [firestore, user]);
 
     const userAccountRef = useMemoFirebase(() => {
@@ -120,7 +120,7 @@ export default function ProfilePage() {
                                         <Input 
                                             value={newDisplayName} 
                                             onChange={(e) => setNewDisplayName(e.target.value)} 
-                                            className="text-3xl font-bold h-12 w-auto text-center"
+                                            className="text-2xl font-bold h-11 text-center w-64"
                                         />
                                         <Button size="icon" variant="ghost" onClick={handleSave}>
                                             <Check className="w-5 h-5 text-green-500" />
