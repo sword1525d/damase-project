@@ -42,7 +42,7 @@ export function UserDropdown() {
             <AvatarFallback>{userProfile?.displayName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
            {userProfile?.level && (
-            <Badge variant="default" className="absolute -bottom-1 -right-1 h-5 w-5 p-0 justify-center text-xs rounded-full">
+            <Badge variant="default" className="absolute -bottom-1 -right-1 h-5 w-5 p-0 justify-center text-xs rounded-full border-2 border-background">
               {userProfile.level}
             </Badge>
           )}
