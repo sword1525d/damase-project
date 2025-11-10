@@ -9,6 +9,11 @@ import type { DocumentReference } from 'firebase/firestore';
 type Piece = { player: 'p1' | 'p2'; isKing: boolean } | null;
 type Board = { [row: number]: { [col: number]: Piece } };
 type Position = { row: number; col: number };
+type Move = {
+    to: Position;
+    capturedPiece: Position | null;
+};
+
 
 const generateInitialBoard = (): Board => {
     const board: Board = {};
@@ -49,6 +54,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const [board, setBoard] = useState<Board>(gameSession?.board || generateInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [forcedCaptureMoves, setForcedCaptureMoves] = useState<Move[]>([]);
   const { user } = useUser();
 
   const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
@@ -67,66 +73,112 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
 
   const handleSquareClick = (row: number, col: number) => {
     if (!gameSessionRef) return;
-    if (currentPlayer !== localPlayer) return; // Not your turn
+    if (currentPlayer !== localPlayer) return;
 
     const clickedPiece = board[row]?.[col];
+    const targetMove = possibleMoves.find(move => move.to.row === row && move.to.col === col);
 
-    if (selectedPiece) {
-      const isPossibleMove = possibleMoves.some(move => move.row === row && move.col === col);
-      if (isPossibleMove) {
+    if (selectedPiece && targetMove) {
         const newBoard = JSON.parse(JSON.stringify(board)); // Deep copy
         const pieceToMove = newBoard[selectedPiece.row][selectedPiece.col];
-        
-        newBoard[row] = { ...newBoard[row], [col]: pieceToMove };
-        newBoard[selectedPiece.row] = { ...newBoard[selectedPiece.row], [selectedPiece.col]: null };
-        
+
+        // Move piece
+        newBoard[row][col] = pieceToMove;
+        newBoard[selectedPiece.row][selectedPiece.col] = null;
+
+        // Handle capture
+        if (targetMove.capturedPiece) {
+            newBoard[targetMove.capturedPiece.row][targetMove.capturedPiece.col] = null;
+        }
+
         // King me?
-        if (pieceToMove && ( (pieceToMove.player === 'p1' && row === 7) || (pieceToMove.player === 'p2' && row === 0) ) ){
+        if (pieceToMove && ((pieceToMove.player === 'p1' && row === 7) || (pieceToMove.player === 'p2' && row === 0))) {
             pieceToMove.isKing = true;
             newBoard[row][col] = pieceToMove; // Update the piece on the new board
         }
+        
+        const canCaptureAgain = targetMove.capturedPiece && calculatePossibleMoves({row, col}, newBoard).some(m => m.capturedPiece);
+        const nextTurn = canCaptureAgain ? gameSession.turn : (gameSession.turn === gameSession.player1Id ? gameSession.player2Id : gameSession.player1Id);
 
-        const nextTurn = gameSession.turn === gameSession.player1Id ? gameSession.player2Id : gameSession.player1Id;
         updateDocumentNonBlocking(gameSessionRef, { board: newBoard, turn: nextTurn });
         setSelectedPiece(null);
-      } else if (clickedPiece && clickedPiece.player === localPlayer) {
-        setSelectedPiece({ row, col });
-      } else {
-        setSelectedPiece(null);
-      }
+
     } else if (clickedPiece && clickedPiece.player === localPlayer) {
       setSelectedPiece({ row, col });
+    } else {
+      setSelectedPiece(null);
     }
   };
   
-  const possibleMoves = useMemo(() => {
-    if (!selectedPiece) return [];
-    const moves: Position[] = [];
-    const { row, col } = selectedPiece;
-    const piece = board[row]?.[col];
-    if (!piece) return [];
-
-    const moveDirections = (player: 'p1' | 'p2', isKing: boolean) => {
-        const directions: number[] = [];
-        if (player === 'p1' || isKing) directions.push(1); // Down
-        if (player === 'p2' || isKing) directions.push(-1); // Up
-        return directions;
-    }
+    const calculatePossibleMoves = (piecePosition: Position, currentBoard: Board): Move[] => {
+        if (!piecePosition) return [];
+        const moves: Move[] = [];
+        const { row, col } = piecePosition;
+        const piece = currentBoard[row]?.[col];
+        if (!piece) return [];
     
-    const directions = moveDirections(piece.player, piece.isKing);
-
-    for (const dir of directions) {
-        const newRow = row + dir;
-        if (newRow >= 0 && newRow < 8) {
+        const moveDirections = (player: 'p1' | 'p2', isKing: boolean): number[] => {
+            if (isKing) return [-1, 1]; // Up and Down
+            return player === 'p1' ? [1] : [-1]; // p1 Down, p2 Up
+        };
+    
+        const directions = moveDirections(piece.player, piece.isKing);
+    
+        for (const dir of directions) {
             // Normal moves
-            if (col > 0 && !board[newRow]?.[col - 1]) moves.push({ row: newRow, col: col - 1 });
-            if (col < 7 && !board[newRow]?.[col + 1]) moves.push({ row: newRow, col: col + 1 });
-            // TODO: Capture moves
+            [-1, 1].forEach(side => {
+                const newRow = row + dir;
+                const newCol = col + side;
+                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && !currentBoard[newRow]?.[newCol]) {
+                    moves.push({ to: { row: newRow, col: newCol }, capturedPiece: null });
+                }
+            });
+    
+            // Capture moves
+            [-1, 1].forEach(side => {
+                const newRow = row + dir;
+                const newCol = col + side;
+                const jumpRow = row + dir * 2;
+                const jumpCol = col + side * 2;
+    
+                if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8 &&
+                    currentBoard[newRow]?.[newCol]?.player &&
+                    currentBoard[newRow][newCol]?.player !== piece.player &&
+                    !currentBoard[jumpRow]?.[jumpCol]) {
+                    moves.push({ to: { row: jumpRow, col: jumpCol }, capturedPiece: { row: newRow, col: newCol } });
+                }
+            });
         }
-    }
+        return moves;
+    };
+    
+    const possibleMoves = useMemo(() => {
+        if (!selectedPiece) return [];
+        
+        const allCaptureMoves: {piece: Position, moves: Move[]}[] = [];
+         for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = board[r]?.[c];
+                if (piece && piece.player === localPlayer) {
+                    const moves = calculatePossibleMoves({ row: r, col: c }, board);
+                    const captureMoves = moves.filter(m => m.capturedPiece);
+                    if(captureMoves.length > 0){
+                        allCaptureMoves.push({piece: {row: r, col: c}, moves: captureMoves});
+                    }
+                }
+            }
+        }
 
-    return moves;
-  }, [selectedPiece, board]);
+        const movesForSelectedPiece = calculatePossibleMoves(selectedPiece, board);
+        if(allCaptureMoves.length > 0){
+            const capturesForSelected = allCaptureMoves.find(p => p.piece.row === selectedPiece.row && p.piece.col === selectedPiece.col);
+            return capturesForSelected ? capturesForSelected.moves : [];
+        }
+
+        return movesForSelectedPiece.filter(m => !m.capturedPiece);
+
+    }, [selectedPiece, board, localPlayer]);
+
 
   if (!isClient) {
     return (
@@ -144,7 +196,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
           row.map((piece, colIndex) => {
             const isDark = (rowIndex + colIndex) % 2 !== 0;
             const isSelected = selectedPiece?.row === rowIndex && selectedPiece?.col === colIndex;
-            const isMovable = possibleMoves.some(move => move.row === rowIndex && move.col === colIndex);
+            const isMovable = possibleMoves.some(move => move.to.row === rowIndex && move.to.col === colIndex);
 
             return (
               <div
@@ -152,7 +204,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                 onClick={() => handleSquareClick(rowIndex, colIndex)}
                 className={cn(
                   'flex items-center justify-center transition-colors duration-200',
-                   isDark ? 'bg-black' : 'bg-white',
+                   isDark ? 'bg-neutral-800' : 'bg-neutral-200',
                   (isMyTurn && (piece || isMovable)) && 'cursor-pointer'
                 )}
                 role="button"
@@ -165,7 +217,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                   <div
                     className={cn(
                       'w-[80%] h-[80%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
-                      piece.player === 'p1' ? 'bg-zinc-800 border-4 border-zinc-950' : 'bg-zinc-300 border-4 border-zinc-400',
+                      piece.player === 'p1' ? 'bg-zinc-800 border-4 border-zinc-950' : 'bg-stone-300 border-4 border-stone-400',
                       isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-blue-500 ring-offset-transparent'
                     )}
                   >
