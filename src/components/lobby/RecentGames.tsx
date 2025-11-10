@@ -1,3 +1,4 @@
+
 'use client';
 import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
@@ -31,25 +32,34 @@ function OpponentInfo({ game }: { game: any }) {
     const firestore = useFirestore();
     const opponentId = game.player1Id === user?.uid ? game.player2Id : game.player1Id;
 
+    const isBotOpponent = opponentId === 'checkers_bot';
+    const botProfile = game.botPlayer;
+
     const userProfileRef = useMemoFirebase(() => {
-        if (!opponentId) return null;
+        if (!opponentId || isBotOpponent) return null;
         return doc(firestore, `users/${opponentId}/profile`, 'main');
-    }, [firestore, opponentId]);
+    }, [firestore, opponentId, isBotOpponent]);
 
-    const { data: opponentProfile } = useDoc(userProfileRef);
+    const { data: opponentProfile, isLoading } = useDoc(userProfileRef);
 
-    if (!opponentProfile) {
+    const profile = isBotOpponent ? botProfile : opponentProfile;
+
+    if (isLoading) {
         return <div className="h-10 w-24 animate-pulse bg-secondary rounded-md" />;
+    }
+
+    if (!profile) {
+        return <div className="flex items-center gap-3 text-sm text-muted-foreground">Oponente desconhecido</div>;
     }
 
     return (
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-                <AvatarImage src={opponentProfile.avatarUrl} alt={opponentProfile.displayName} data-ai-hint="avatar" />
-                <AvatarFallback>{opponentProfile.displayName?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarImage src={profile.avatarUrl} alt={profile.displayName} data-ai-hint="avatar" />
+                <AvatarFallback>{profile.displayName?.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-                <p className="font-medium text-sm truncate">{opponentProfile.displayName}</p>
+                <p className="font-medium text-sm truncate">{profile.displayName}</p>
                 <p className='text-xs text-muted-foreground'>
                    {game.endTime ? formatDistanceToNow(new Date(game.endTime), { addSuffix: true, locale: ptBR }) : 'Agora'}
                 </p>
