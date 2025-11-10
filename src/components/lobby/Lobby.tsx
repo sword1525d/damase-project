@@ -127,6 +127,8 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
                 const botPlayerId = 'checkers_bot';
                 const portraitImages = ['/portraits/Joe.png', '/portraits/James.png', '/portraits/Jena.png', '/portraits/Jonny.png', '/portraits/Jigg.png'];
                 const randomAvatar = portraitImages[Math.floor(Math.random() * portraitImages.length)];
+                const botNames = ['DamaMaster', 'ReiDoTabuleiro', 'CheckersBot', 'BotAmigo', 'DesafianteIA', 'XEQUE-MATE'];
+                const randomBotName = botNames[Math.floor(Math.random() * botNames.length)];
                 
                  const gameSession = {
                     player1Id: user.uid,
@@ -139,7 +141,7 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
                     presentPlayers: { [user.uid]: true, [botPlayerId]: true },
                     botPlayer: {
                         id: botPlayerId,
-                        displayName: 'CheckersBot',
+                        displayName: randomBotName,
                         avatarUrl: randomAvatar,
                         playerKey: 'p2'
                     }
