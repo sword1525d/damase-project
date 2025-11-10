@@ -1,4 +1,3 @@
-
 'use client';
 import { PlayerInfo } from "./PlayerInfo";
 import { CheckersBoard } from "./CheckersBoard";
@@ -7,15 +6,27 @@ import { doc } from "firebase/firestore";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
-import { Trophy, Users } from "lucide-react";
-import { useEffect } from "react";
+import { Trophy, Users, Flag } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 export function GameArea({ gameId }: { gameId: string }) {
   const firestore = useFirestore();
   const { user } = useUser();
   const router = useRouter();
+  const [showForfeitDialog, setShowForfeitDialog] = useState(false);
 
   const gameSessionRef = useMemoFirebase(() => {
       if (!gameId) return null;
@@ -26,18 +37,22 @@ export function GameArea({ gameId }: { gameId: string }) {
 
   // Set user as present in the game
   useEffect(() => {
-    if (gameSessionRef && user) {
+    if (gameSessionRef && user && gameSession?.status !== 'completed') {
         const presenceUpdate: { [key: string]: boolean } = {};
         presenceUpdate[`presentPlayers.${user.uid}`] = true;
         updateDocumentNonBlocking(gameSessionRef, presenceUpdate);
 
         return () => {
-             const absenceUpdate: { [key: string]: boolean } = {};
-             absenceUpdate[`presentPlayers.${user.uid}`] = false;
-             updateDocumentNonBlocking(gameSessionRef, absenceUpdate);
+            // Only mark as absent if the component is unmounting and the game is still active
+            // This is a simplified "rage quit" detection
+            if (gameSession?.status === 'active') {
+                const absenceUpdate: { [key: string]: boolean } = {};
+                absenceUpdate[`presentPlayers.${user.uid}`] = false;
+                updateDocumentNonBlocking(gameSessionRef, absenceUpdate);
+            }
         }
     }
-  }, [gameSessionRef, user]);
+  }, [gameSessionRef, user, gameSession?.status]);
 
 
   const player1Id = gameSession?.player1Id;
@@ -48,6 +63,18 @@ export function GameArea({ gameId }: { gameId: string }) {
   const gameStatus = gameSession?.status;
 
   const areBothPlayersPresent = !!(gameSession?.presentPlayers?.[player1Id] && gameSession?.presentPlayers?.[player2Id]);
+
+  const handleForfeit = () => {
+    if (!gameSessionRef || !opponentId) return;
+
+    const gameUpdate = {
+      status: 'completed',
+      winnerId: opponentId,
+      endTime: new Date().toISOString(),
+    };
+    updateDocumentNonBlocking(gameSessionRef, gameUpdate);
+    setShowForfeitDialog(false);
+  }
 
   if (isLoading || !gameSession) {
     return (
@@ -112,9 +139,31 @@ export function GameArea({ gameId }: { gameId: string }) {
 
 
   return (
-    <div className="flex-1 flex flex-col p-4 pt-20 md:p-6 lg:p-8 items-center justify-center">
+    <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 items-center justify-center relative">
       <PlayerInfo playerId={user?.uid} opponentId={opponentId} isMyTurn={isMyTurn} bothPlayersPresent={areBothPlayersPresent} />
       <CheckersBoard gameSession={gameSession} gameSessionRef={gameSessionRef} />
+       <AlertDialog open={showForfeitDialog} onOpenChange={setShowForfeitDialog}>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="absolute bottom-4 right-4 lg:bottom-8 lg:right-8">
+                    <Flag className="w-4 h-4 mr-2" />
+                    Desistir
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Desistir da Partida?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Você tem certeza que quer desistir? Isso contará como uma derrota em seu histórico.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleForfeit} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                        Confirmar Desistência
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
