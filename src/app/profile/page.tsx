@@ -7,11 +7,13 @@ import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { collection, query, where, doc } from 'firebase/firestore';
-import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil, X, Check } from "lucide-react";
+import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil } from "lucide-react";
 import { RecentGames } from "@/components/lobby/RecentGames";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 function StatCard({ icon, title, value }: { icon: React.ReactNode, title: string, value: number | string }) {
     return (
@@ -29,7 +31,7 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const router = useRouter();
     const firestore = useFirestore();
-    const [isEditing, setIsEditing] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [newDisplayName, setNewDisplayName] = useState('');
 
     useEffect(() => {
@@ -85,7 +87,7 @@ export default function ProfilePage() {
     const handleSave = () => {
         if (newDisplayName.trim() && userProfileRef) {
             updateDocumentNonBlocking(userProfileRef, { displayName: newDisplayName.trim() });
-            setIsEditing(false);
+            setIsModalOpen(false);
         }
     }
 
@@ -115,28 +117,43 @@ export default function ProfilePage() {
                         </Avatar>
                         <div>
                              <div className="flex items-center gap-2 justify-center">
-                                {isEditing ? (
-                                    <div className="flex items-center gap-2">
-                                        <Input 
-                                            value={newDisplayName} 
-                                            onChange={(e) => setNewDisplayName(e.target.value)} 
-                                            className="text-2xl font-bold h-11 text-center w-64"
-                                        />
-                                        <Button size="icon" variant="ghost" onClick={handleSave}>
-                                            <Check className="w-5 h-5 text-green-500" />
-                                        </Button>
-                                        <Button size="icon" variant="ghost" onClick={() => { setIsEditing(false); setNewDisplayName(userProfile.displayName); }}>
-                                            <X className="w-5 h-5 text-destructive" />
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <CardTitle className="text-3xl font-bold">{userProfile.displayName}</CardTitle>
-                                        <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
+                                <CardTitle className="text-3xl font-bold">{userProfile.displayName}</CardTitle>
+                                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button size="icon" variant="ghost">
                                             <Pencil className="w-5 h-5" />
                                         </Button>
-                                    </>
-                                )}
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                        <DialogTitle>Editar nome de exibição</DialogTitle>
+                                        <DialogDescription>
+                                            Faça alterações no seu nome de exibição aqui. Clique em salvar quando terminar.
+                                        </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="name" className="text-right">
+                                                    Nome
+                                                </Label>
+                                                <Input 
+                                                    id="name" 
+                                                    value={newDisplayName}
+                                                    onChange={(e) => setNewDisplayName(e.target.value)}
+                                                    className="col-span-3"
+                                                />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" variant="secondary">
+                                                    Cancelar
+                                                </Button>
+                                            </DialogClose>
+                                            <Button type="button" onClick={handleSave}>Salvar alterações</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                             <CardDescription className="text-muted-foreground">ID: #{userAccount.numericId}</CardDescription>
                         </div>
