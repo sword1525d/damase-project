@@ -1,16 +1,17 @@
 'use client';
 
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { collection, query, where, doc } from 'firebase/firestore';
-import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail } from "lucide-react";
+import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil, X, Check } from "lucide-react";
 import { RecentGames } from "@/components/lobby/RecentGames";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 function StatCard({ icon, title, value }: { icon: React.ReactNode, title: string, value: number | string }) {
     return (
@@ -28,6 +29,8 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const router = useRouter();
     const firestore = useFirestore();
+    const [isEditing, setIsEditing] = useState(false);
+    const [newDisplayName, setNewDisplayName] = useState('');
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -47,6 +50,12 @@ export default function ProfilePage() {
 
     const { data: userProfile } = useDoc(userProfileRef);
     const { data: userAccount } = useDoc(userAccountRef);
+
+    useEffect(() => {
+        if (userProfile) {
+            setNewDisplayName(userProfile.displayName);
+        }
+    }, [userProfile]);
 
     const gamesAsPlayer1Query = useMemoFirebase(() => {
         if (!user) return null;
@@ -73,6 +82,13 @@ export default function ProfilePage() {
         return { wins, losses, draws, total };
     }, [gamesAsPlayer1, gamesAsPlayer2, user]);
 
+    const handleSave = () => {
+        if (newDisplayName.trim() && userProfileRef) {
+            updateDocumentNonBlocking(userProfileRef, { displayName: newDisplayName.trim() });
+            setIsEditing(false);
+        }
+    }
+
     if (isUserLoading || !user || !userProfile || !userAccount) {
         return (
             <div className="h-screen flex items-center justify-center bg-background">
@@ -98,7 +114,30 @@ export default function ProfilePage() {
                             <AvatarFallback>{userProfile.displayName?.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <CardTitle className="text-3xl font-bold">{userProfile.displayName}</CardTitle>
+                             <div className="flex items-center gap-2 justify-center">
+                                {isEditing ? (
+                                    <div className="flex items-center gap-2">
+                                        <Input 
+                                            value={newDisplayName} 
+                                            onChange={(e) => setNewDisplayName(e.target.value)} 
+                                            className="text-3xl font-bold h-12 w-auto text-center"
+                                        />
+                                        <Button size="icon" variant="ghost" onClick={handleSave}>
+                                            <Check className="w-5 h-5 text-green-500" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" onClick={() => { setIsEditing(false); setNewDisplayName(userProfile.displayName); }}>
+                                            <X className="w-5 h-5 text-destructive" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <CardTitle className="text-3xl font-bold">{userProfile.displayName}</CardTitle>
+                                        <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
+                                            <Pencil className="w-5 h-5" />
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
                             <CardDescription className="text-muted-foreground">ID: #{userAccount.numericId}</CardDescription>
                         </div>
                     </CardHeader>
