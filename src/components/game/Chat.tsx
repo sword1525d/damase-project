@@ -54,7 +54,7 @@ export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b">
+      <div className="p-4">
         <h2 className="text-xl font-semibold">Game Chat</h2>
       </div>
       <ScrollArea className="flex-1 p-4" viewportRef={scrollAreaRef}>
@@ -72,7 +72,7 @@ export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
             ))}
         </div>
       </ScrollArea>
-      <div className="p-4 border-t mt-auto">
+      <div className="p-4 mt-auto">
         <form onSubmit={handleSend} className="flex items-center gap-2">
           <div className="relative flex-1">
             <Input 
