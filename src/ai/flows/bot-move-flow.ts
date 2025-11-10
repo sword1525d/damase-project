@@ -38,7 +38,6 @@ export async function getBotMove(input: BotMoveInput): Promise<BotMoveOutput> {
   return await botMoveFlow(input);
 }
 
-
 const botMovePrompt = ai.definePrompt({
     name: 'checkersBotMovePrompt',
     input: { schema: BotMoveInputSchema },
@@ -89,7 +88,7 @@ const botMoveFlow = ai.defineFlow(
         return { bestMove: input.possibleMoves[0] };
     }
 
-    const { output } = await botMovePrompt({ ...input });
+    const { output } = await botMovePrompt(input);
     return output!;
   }
 );
