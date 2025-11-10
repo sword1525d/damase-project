@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Crown } from "lucide-react";
 import { useAuth, useUser, useFirestore } from "@/firebase";
 import { initiateEmailSignUp } from "@/firebase/non-blocking-login";
 import React, { useEffect, useState } from "react";
@@ -95,7 +95,7 @@ export function RegisterForm() {
     <Card className="w-full max-w-sm border-2 border-border shadow-2xl">
       <CardHeader className="text-center">
         <div className="flex justify-center items-center gap-2 mb-4">
-            <Crown className="w-8 h-8 text-primary" />
+            <Image src="/icon.svg" alt="Dama-se logo" width={32} height={32} className="h-8 w-8" />
             <CardTitle className="text-3xl font-bold">Dama-se</CardTitle>
         </div>
         <CardDescription>Crie sua conta para começar a jogar.</CardDescription>
