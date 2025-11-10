@@ -10,7 +10,7 @@ export function Lobby() {
             <GameInvites />
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
-                    <CardTitle className="text-3xl font-bold">Lobby de Jogos</CardTitle>
+                    <CardTitle className="text-3xl font-bold">Lobby</CardTitle>
                     <CardDescription>Escolha como você quer jogar.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
