@@ -1,6 +1,6 @@
 'use client';
 import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, limit, doc } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Crown, Swords, Handshake } from 'lucide-react';
@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMemo } from 'react';
+import { doc } from 'firebase/firestore';
 
 function GameResult({ game }: { game: any }) {
     const { user } = useUser();
@@ -62,39 +63,39 @@ export function RecentGames() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    // Query for games where user is player1
+    // Query for games where user is player1 (sem orderBy para evitar índices compostos)
     const gamesAsPlayer1Query = useMemoFirebase(() => {
         if (!user) return null;
         return query(
             collection(firestore, 'game_sessions'),
             where('player1Id', '==', user.uid),
-            where('status', '==', 'completed'),
-            orderBy('endTime', 'desc'),
-            limit(5)
+            where('status', '==', 'completed')
         );
     }, [firestore, user]);
 
-    // Query for games where user is player2
+    // Query for games where user is player2 (sem orderBy para evitar índices compostos)
     const gamesAsPlayer2Query = useMemoFirebase(() => {
         if (!user) return null;
         return query(
             collection(firestore, 'game_sessions'),
             where('player2Id', '==', user.uid),
-            where('status', '==', 'completed'),
-            orderBy('endTime', 'desc'),
-            limit(5)
+            where('status', '==', 'completed')
         );
     }, [firestore, user]);
 
     const { data: games1, isLoading: isLoading1 } = useCollection(gamesAsPlayer1Query);
     const { data: games2, isLoading: isLoading2 } = useCollection(gamesAsPlayer2Query);
 
+    // Combina, remove duplicatas, ordena e limita em memória
     const games = useMemo(() => {
         const allGames = [...(games1 || []), ...(games2 || [])];
         // Remove duplicates in case a user plays against themselves (unlikely but safe)
         const uniqueGames = Array.from(new Map(allGames.map(game => [game.id, game])).values());
         // Sort by endTime and take the latest 5
-        return uniqueGames.sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()).slice(0, 5);
+        return uniqueGames
+            .filter(game => game.endTime) // Garante que endTime existe
+            .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
+            .slice(0, 5);
     }, [games1, games2]);
 
     const isLoading = isLoading1 || isLoading2;
@@ -104,7 +105,6 @@ export function RecentGames() {
         <Card className="w-full">
             <CardHeader>
                 <CardTitle>Partidas Recentes</CardTitle>
-                <CardDescription>Suas últimas 5 partidas concluídas.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading && (
