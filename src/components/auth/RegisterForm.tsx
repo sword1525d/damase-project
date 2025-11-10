@@ -14,10 +14,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Crown } from "lucide-react";
-import { useAuth, useUser, useFirestore, setDocumentNonBlocking } from "@/firebase";
+import { useAuth, useUser, useFirestore } from "@/firebase";
 import { initiateEmailSignUp } from "@/firebase/non-blocking-login";
 import React, { useEffect, useState } from "react";
-import { doc } from "firebase/firestore";
+import { doc, getDoc, setDoc, runTransaction } from "firebase/firestore";
+
+
+async function getNextNumericId(firestore: any) {
+    const counterRef = doc(firestore, 'metadata', 'userCounter');
+    let newId;
+    
+    await runTransaction(firestore, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        let lastId = 100000; // Start from 100001
+        if (counterDoc.exists()) {
+            lastId = counterDoc.data().lastId;
+        }
+        newId = lastId + 1;
+        transaction.set(counterRef, { lastId: newId });
+    });
+
+    return newId?.toString().padStart(6, '0');
+}
+
 
 export function RegisterForm() {
   const router = useRouter();
@@ -30,25 +49,32 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-      const userDocRef = doc(firestore, `users/${user.uid}`);
-      setDocumentNonBlocking(userDocRef, {
-        id: user.uid,
-        username: username || user.displayName || user.email,
-        email: user.email,
-        registrationDate: user.metadata.creationTime || new Date().toISOString(),
-      }, { merge: true });
+    const setupUser = async () => {
+        if (!isUserLoading && user && firestore) {
+            const userDocRef = doc(firestore, `users/${user.uid}`);
+            const userDoc = await getDoc(userDocRef);
 
-      const userProfileDocRef = doc(firestore, `users/${user.uid}/profile`, "main");
-        setDocumentNonBlocking(userProfileDocRef, {
-            id: 'main',
-            displayName: username || user.displayName || user.email,
-            avatarUrl: user.photoURL,
-        }, { merge: true });
+            if (!userDoc.exists()) {
+                const numericId = await getNextNumericId(firestore);
+                await setDoc(userDocRef, {
+                    id: user.uid,
+                    numericId: numericId,
+                    username: username || user.displayName || user.email,
+                    email: user.email,
+                    registrationDate: user.metadata.creationTime || new Date().toISOString(),
+                }, { merge: true });
 
-
-      router.push("/dashboard");
-    }
+                const userProfileDocRef = doc(firestore, `users/${user.uid}/profile`, "main");
+                await setDoc(userProfileDocRef, {
+                    id: 'main',
+                    displayName: username || user.displayName || user.email,
+                    avatarUrl: user.photoURL,
+                }, { merge: true });
+            }
+            router.push("/dashboard");
+        }
+    };
+    setupUser();
   }, [user, isUserLoading, router, firestore, username]);
 
   const handleRegister = (e: React.FormEvent) => {

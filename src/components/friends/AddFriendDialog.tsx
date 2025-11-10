@@ -18,7 +18,7 @@ import { UserPlus } from "lucide-react";
 import { useState } from "react";
 
 export function AddFriendDialog() {
-  const [username, setUsername] = useState('');
+  const [friendId, setFriendId] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -26,18 +26,18 @@ export function AddFriendDialog() {
   const { user } = useUser();
 
   const handleSearch = async () => {
-    if (!username.trim()) return;
+    if (!friendId.trim()) return;
     setError('');
     setSuccess('');
     setSearchResult(null);
 
     const usersRef = collection(firestore, 'users');
-    const q = query(usersRef, where("username", "==", username.trim()));
+    const q = query(usersRef, where("numericId", "==", friendId.trim()));
 
     try {
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) {
-        setError("User not found.");
+        setError("User not found with this ID.");
       } else {
         const foundUser = querySnapshot.docs[0].data();
         if (foundUser.id === user?.uid) {
@@ -83,7 +83,7 @@ export function AddFriendDialog() {
         .then(() => {
             setSuccess(`Friend request sent to ${searchResult.username}!`);
             setSearchResult(null);
-            setUsername('');
+            setFriendId('');
         })
         .catch(() => {
             setError("Failed to send friend request.");
@@ -98,23 +98,24 @@ export function AddFriendDialog() {
           <UserPlus className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] pt-12">
         <DialogHeader>
           <DialogTitle>Add Friend</DialogTitle>
           <DialogDescription>
-            Enter the username of the person you want to add.
+            Enter the 6-digit ID of the person you want to add.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="username" className="text-right">
-              Username
+              User ID
             </Label>
             <Input 
-              id="username" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
+              id="friendId" 
+              value={friendId} 
+              onChange={(e) => setFriendId(e.target.value)} 
               className="col-span-3"
+              placeholder="e.g. 100001"
             />
           </div>
         </div>
@@ -124,7 +125,7 @@ export function AddFriendDialog() {
 
         {searchResult && (
           <div className="flex justify-between items-center p-2 border rounded-md">
-            <span>{searchResult.username}</span>
+            <span>{searchResult.username} (#{searchResult.numericId})</span>
             <Button size="sm" onClick={handleAddFriend}>Add</Button>
           </div>
         )}

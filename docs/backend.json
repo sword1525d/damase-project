@@ -8,7 +8,11 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user account."
+          "description": "Unique identifier for the user account (Firebase Auth UID)."
+        },
+        "numericId": {
+          "type": "string",
+          "description": "A unique, sequential 6-digit identifier for the user."
         },
         "username": {
           "type": "string",
@@ -37,10 +41,10 @@
       },
       "required": [
         "id",
+        "numericId",
         "username",
         "email",
-        "registrationDate",
-        "profileId"
+        "registrationDate"
       ]
     },
     "UserProfile": {
