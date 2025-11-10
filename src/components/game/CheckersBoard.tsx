@@ -64,7 +64,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const isBotTurn = isBotGame && gameSession?.turn === gameSession?.botPlayer?.id;
   const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
   const localPlayer = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
-  const isMyTurn = (gameSession?.status === 'active' || gameSession?.status === 'ready') && currentPlayer === localPlayer && !isBotGame;
+  const isMyTurn = (gameSession?.status === 'active' || gameSession?.status === 'ready') && currentPlayer === localPlayer;
 
 
   useEffect(() => {
@@ -392,5 +392,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     </div>
   );
 }
+
+    
 
     
