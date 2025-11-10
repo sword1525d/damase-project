@@ -19,7 +19,6 @@ export function Lobby() {
                         <Swords className="mr-2 h-6 w-6" />
                         Partida Aleatória
                     </Button>
-                    <p className="text-center text-sm text-muted-foreground">Ou convide um amigo da lista à esquerda.</p>
                 </CardContent>
             </Card>
 
