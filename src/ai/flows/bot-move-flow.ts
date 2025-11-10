@@ -22,7 +22,7 @@ const MoveSchema = z.object({
   capturedPiece: PositionSchema.nullable(),
 });
 
-export const BotMoveInputSchema = z.object({
+const BotMoveInputSchema = z.object({
   board: BoardSchema.describe('The current state of the checkers board as a JSON object.'),
   possibleMoves: z.array(MoveSchema).describe('A list of all valid moves for the bot to choose from.'),
   botPlayerKey: z.enum(['p1', 'p2']).describe("The key representing the bot player, either 'p1' or 'p2'."),
@@ -30,7 +30,7 @@ export const BotMoveInputSchema = z.object({
 });
 export type BotMoveInput = z.infer<typeof BotMoveInputSchema>;
 
-export const BotMoveOutputSchema = z.object({
+const BotMoveOutputSchema = z.object({
   bestMove: MoveSchema.describe('The best move the bot has decided to make from the list of possible moves.'),
 });
 export type BotMoveOutput = z.infer<typeof BotMoveOutputSchema>;
