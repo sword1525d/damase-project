@@ -1,12 +1,12 @@
 
 'use client';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameInvites } from "@/components/lobby/GameInvites";
 import { Swords, Users, Trophy } from "lucide-react";
 import { RecentGames } from "./RecentGames";
 import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { collection, query, where, getDocs, limit, orderBy, addDoc, serverTimestamp, deleteDoc, doc as firestoreDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, orderBy, addDoc, serverTimestamp, deleteDoc, doc as firestoreDoc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingAnimation } from "../game/LoadingAnimation";
@@ -57,14 +57,15 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
         
         setIsMatchmaking(true);
         const queueRef = collection(firestore, 'matchmakingQueue');
-        const q = query(queueRef, where("playerId", "!=", user.uid), orderBy("playerId"), orderBy('timestamp', 'asc'), limit(1));
+        // Simplified query to get the oldest player in the queue.
+        const q = query(queueRef, orderBy('timestamp', 'asc'), limit(1));
 
         try {
             const querySnapshot = await getDocs(q);
+            let opponentDoc = querySnapshot.docs.find(doc => doc.data().playerId !== user.uid);
 
-            if (!querySnapshot.empty) {
-                // Found a player, create a match
-                const opponentDoc = querySnapshot.docs[0];
+            if (opponentDoc) {
+                // Found an opponent
                 const opponentId = opponentDoc.data().playerId;
 
                 // Remove opponent from queue
@@ -93,8 +94,16 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
                 router.push(`/game/${docRef.id}`);
 
             } else {
-                // No player found, add to queue and wait for a bit, then match with bot
-                const queueDocRef = firestoreDoc(collection(firestore, 'matchmakingQueue'), user.uid);
+                // No valid opponent found, add to queue and wait, then match with bot
+                const myQueueDocRef = firestoreDoc(queueRef, user.uid);
+                
+                // Check if I'm already in the queue
+                const myDoc = await getDoc(myQueueDocRef);
+                if (myDoc.exists()) {
+                     // This can happen in a race condition. Let's just wait.
+                     return;
+                }
+
                 await addDoc(collection(firestore, 'matchmakingQueue'), {
                     playerId: user.uid,
                     timestamp: serverTimestamp(),
@@ -103,16 +112,16 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
                 // Wait for 5 seconds to see if someone joins
                 await new Promise(resolve => setTimeout(resolve, 5000));
                 
-                const myQueueDoc = await getDocs(query(queueRef, where("playerId", "==", user.uid)));
+                const myQueueSnapshot = await getDocs(query(queueRef, where("playerId", "==", user.uid)));
                 
-                if (myQueueDoc.empty) {
-                    // I was matched by someone else
+                if (myQueueSnapshot.empty) {
+                    // I was matched by someone else while waiting
                     setIsMatchmaking(false);
                     return;
                 }
 
                 // Still in queue, so remove myself and create bot match
-                myQueueDoc.forEach(doc => deleteDoc(doc.ref));
+                myQueueSnapshot.forEach(doc => deleteDoc(doc.ref));
 
                 const botPlayerId = 'checkers_bot';
                 const portraitImages = ['/portraits/Joe.png', '/portraits/James.png', '/portraits/Jena.png', '/portraits/Jonny.png', '/portraits/Jigg.png'];
@@ -158,7 +167,7 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
     }
 
     return (
-        <div className="flex flex-col items-center justify-center h-full p-4">
+        <div className="flex flex-col items-center justify-center h-full">
             <GameInvites />
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
