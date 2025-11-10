@@ -39,7 +39,7 @@ export default function ProfilePage() {
     const [selectedAvatar, setSelectedAvatar] = useState('');
 
     const isGoogleProvider = user?.providerData.some(p => p.providerId === 'google.com');
-    const portraitImages = ['/portraits/1.jpg', '/portraits/2.jpg', '/portraits/3.jpg', '/portraits/4.jpg', '/portraits/5.jpg'];
+    const portraitImages = ['/portraits/Joe.png', '/portraits/James.png', '/portraits/Jena.png', '/portraits/Jonny.png', '/portraits/Jigg.png'];
     const googlePhotoUrl = user?.photoURL;
 
     useEffect(() => {
