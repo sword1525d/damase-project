@@ -26,7 +26,6 @@ export function LoadingAnimation({ className }: { className?: string }) {
                 <circle cx="50" cy="25" r="12" fill="#D2B48C" stroke="#B89C74" strokeWidth="2.5" className="pendulum-piece drop-shadow-lg" />
             </g>
         </svg>
-        <p className="text-muted-foreground font-medium animate-pulse">Carregando...</p>
     </div>
   );
 }
