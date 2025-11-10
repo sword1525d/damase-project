@@ -46,7 +46,7 @@ export function GameInvites() {
   const handleAccept = () => {
     if (!openInvite) return;
     const gameDocRef = doc(firestore, 'game_sessions', openInvite.id);
-    updateDocumentNonBlocking(gameDocRef, { status: 'active' });
+    updateDocumentNonBlocking(gameDocRef, { status: 'ready' });
     router.push(`/game/${openInvite.id}`);
   };
 

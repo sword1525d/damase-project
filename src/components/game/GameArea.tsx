@@ -6,7 +6,7 @@ import { doc } from "firebase/firestore";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
-import { Trophy, Users, Flag } from "lucide-react";
+import { Trophy, Users, Flag, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -42,14 +42,17 @@ export function GameArea({ gameId }: { gameId: string }) {
         presenceUpdate[`presentPlayers.${user.uid}`] = true;
         updateDocumentNonBlocking(gameSessionRef, presenceUpdate);
 
+        const handleBeforeUnload = () => {
+             const absenceUpdate: { [key: string]: boolean } = {};
+             absenceUpdate[`presentPlayers.${user.uid}`] = false;
+             updateDocumentNonBlocking(gameSessionRef, absenceUpdate);
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
         return () => {
-            // Only mark as absent if the component is unmounting and the game is still active
-            // This is a simplified "rage quit" detection
-            if (gameSession?.status === 'active') {
-                const absenceUpdate: { [key: string]: boolean } = {};
-                absenceUpdate[`presentPlayers.${user.uid}`] = false;
-                updateDocumentNonBlocking(gameSessionRef, absenceUpdate);
-            }
+            handleBeforeUnload(); // Mark as absent when component unmounts
+            window.removeEventListener('beforeunload', handleBeforeUnload);
         }
     }
   }, [gameSessionRef, user, gameSession?.status]);
@@ -59,7 +62,6 @@ export function GameArea({ gameId }: { gameId: string }) {
   const player2Id = gameSession?.player2Id;
 
   const opponentId = user?.uid === player1Id ? player2Id : player1Id;
-  const isMyTurn = gameSession?.turn === user?.uid;
   const gameStatus = gameSession?.status;
 
   const areBothPlayersPresent = !!(gameSession?.presentPlayers?.[player1Id] && gameSession?.presentPlayers?.[player2Id]);
@@ -137,10 +139,25 @@ export function GameArea({ gameId }: { gameId: string }) {
     )
   }
 
+  if (gameStatus === 'ready' && areBothPlayersPresent) {
+     return (
+        <div className="flex-1 flex items-center justify-center text-center p-4">
+            <div className="flex flex-col items-center gap-6">
+                <Play className="w-24 h-24 text-primary" strokeWidth={1} />
+                 <div className="space-y-2">
+                    <h2 className="text-3xl font-bold">Pronto para jogar!</h2>
+                    <p className="text-muted-foreground">O jogador 1 começa a partida.</p>
+                </div>
+                <PlayerInfo playerId={user?.uid} opponentId={opponentId} gameSession={gameSession} />
+            </div>
+        </div>
+    );
+  }
+
 
   return (
     <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 items-center justify-center relative">
-      <PlayerInfo playerId={user?.uid} opponentId={opponentId} isMyTurn={isMyTurn} bothPlayersPresent={areBothPlayersPresent} />
+      <PlayerInfo playerId={user?.uid} opponentId={opponentId} gameSession={gameSession} />
       <CheckersBoard gameSession={gameSession} gameSessionRef={gameSessionRef} />
        <AlertDialog open={showForfeitDialog} onOpenChange={setShowForfeitDialog}>
             <AlertDialogTrigger asChild>

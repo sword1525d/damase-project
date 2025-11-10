@@ -12,10 +12,12 @@ interface UserProfileBadgeProps {
     showOnlineStatus?: boolean;
 }
 
+type PresenceStatus = 'online' | 'offline' | 'in-game';
+
 export function UserProfileBadge({ userId, showOnlineStatus = false }: UserProfileBadgeProps) {
     const firestore = useFirestore();
     const database = useDatabase();
-    const [isOnline, setIsOnline] = useState(false);
+    const [presence, setPresence] = useState<PresenceStatus>('offline');
 
     const userProfileRef = useMemoFirebase(() => {
         if (!userId) return null;
@@ -29,7 +31,7 @@ export function UserProfileBadge({ userId, showOnlineStatus = false }: UserProfi
         const userStatusRef = ref(database, 'status/' + userId);
         const unsubscribe = onValue(userStatusRef, (snapshot) => {
             const status = snapshot.val();
-            setIsOnline(status?.state === 'online');
+            setPresence(status?.state || 'offline');
         });
 
         return () => unsubscribe();
@@ -38,6 +40,20 @@ export function UserProfileBadge({ userId, showOnlineStatus = false }: UserProfi
     if (!userProfile) {
         return <div className="h-10 w-full animate-pulse bg-secondary rounded-md" />;
     }
+
+    const getStatusInfo = (status: PresenceStatus): { color: string, text: string } => {
+        switch (status) {
+            case 'online':
+                return { color: 'bg-green-500', text: 'Online' };
+            case 'in-game':
+                return { color: 'bg-yellow-500', text: 'Em Jogo' };
+            case 'offline':
+            default:
+                return { color: 'bg-gray-500', text: 'Offline' };
+        }
+    }
+
+    const statusInfo = getStatusInfo(presence);
 
     return (
         <div className="flex items-center gap-3">
@@ -49,17 +65,16 @@ export function UserProfileBadge({ userId, showOnlineStatus = false }: UserProfi
                 {showOnlineStatus && (
                     <span className={cn(
                     "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
-                    isOnline ? 'bg-green-500' : 'bg-gray-500'
+                    statusInfo.color
                     )} />
                 )}
             </div>
             <div>
                 <p className="font-medium text-sm">{userProfile.displayName}</p>
                 {showOnlineStatus && (
-                     <p className="text-xs text-muted-foreground">{isOnline ? 'Online' : 'Offline'}</p>
+                     <p className="text-xs text-muted-foreground">{statusInfo.text}</p>
                 )}
             </div>
         </div>
     );
 }
-

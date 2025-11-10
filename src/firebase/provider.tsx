@@ -6,6 +6,7 @@ import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { Database, ref, onValue, serverTimestamp, set, onDisconnect } from 'firebase/database';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { usePathname } from 'next/navigation';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -62,6 +63,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     isUserLoading: true, 
     userError: null,
   });
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!auth) { 
@@ -98,25 +100,40 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         last_changed: serverTimestamp(),
     };
 
-    const isOnlineForDatabase = {
+    let status = {
         state: 'online',
         last_changed: serverTimestamp(),
     };
 
+    if (pathname.startsWith('/game/')) {
+        status.state = 'in-game';
+    }
+
+
     const connectedRef = ref(database, '.info/connected');
     const unsubscribePresence = onValue(connectedRef, (snapshot) => {
         if (snapshot.val() === false) {
+            // Se perdermos a conexão, não definimos offline imediatamente. 
+            // `onDisconnect` cuidará disso.
             return;
         }
 
+        // `onDisconnect` garante que o status será 'offline' se o cliente desconectar abruptamente.
         onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
-            set(userStatusDatabaseRef, isOnlineForDatabase);
+            // Uma vez que a operação de desconexão está configurada,
+            // definimos o status atual do usuário.
+            set(userStatusDatabaseRef, status);
         });
     });
 
-    return () => unsubscribePresence();
+    return () => {
+      // Limpa o ouvinte de presença ao desmontar
+      unsubscribePresence();
+      // Define o status como offline ao sair voluntariamente (ex: fechar a aba)
+      set(userStatusDatabaseRef, isOfflineForDatabase);
+    };
 
-  }, [database, userAuthState.user]);
+  }, [database, userAuthState.user, pathname]);
 
 
   const contextValue = useMemo((): FirebaseContextState => {

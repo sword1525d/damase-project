@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -59,7 +58,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
 
   const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
   const localPlayer = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
-  const areBothPlayersPresent = !!(gameSession?.presentPlayers?.[gameSession?.player1Id] && gameSession?.presentPlayers?.[gameSession?.player2Id]);
+  const isMyTurn = currentPlayer === localPlayer && gameSession?.status === 'active';
 
 
   useEffect(() => {
@@ -89,9 +88,8 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     return null;
   }
 
-  const handleSquareClick = (row: number, col: number) => {
-    if (!gameSessionRef) return;
-    if (currentPlayer !== localPlayer || !areBothPlayersPresent) return;
+  const handleSquareClick = async (row: number, col: number) => {
+    if (!gameSessionRef || !isMyTurn) return;
 
     const clickedPiece = board[row]?.[col];
     const targetMove = possibleMoves.find(move => move.to.row === row && move.to.col === col);
@@ -120,20 +118,48 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
 
         const winnerId = checkWinCondition(newBoard);
         const gameUpdate: any = { board: newBoard, turn: nextTurn };
+        
+        if (gameSession.status !== 'active') {
+            gameUpdate.status = 'active';
+        }
+
         if(winnerId){
             gameUpdate.winnerId = winnerId;
             gameUpdate.status = 'completed';
             gameUpdate.endTime = new Date().toISOString();
         }
 
-        updateDocumentNonBlocking(gameSessionRef, gameUpdate);
+        await updateDocumentNonBlocking(gameSessionRef, gameUpdate);
         setSelectedPiece(canCaptureAgain ? {row, col} : null);
 
     } else if (clickedPiece && clickedPiece.player === localPlayer) {
-      setSelectedPiece({ row, col });
+      // Force selection of capturing piece if available
+      const mandatoryMoves = getMandatoryMoves(board, localPlayer);
+      if (mandatoryMoves.length > 0 && !mandatoryMoves.some(m => m.piece.row === row && m.piece.col === col)) {
+        setSelectedPiece(mandatoryMoves[0].piece);
+      } else {
+        setSelectedPiece({ row, col });
+      }
     } else {
       setSelectedPiece(null);
     }
+  };
+
+  const getMandatoryMoves = (currentBoard: Board, player: 'p1' | 'p2'): { piece: Position, moves: Move[] }[] => {
+      const allCaptureMoves: { piece: Position, moves: Move[] }[] = [];
+      for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+              const piece = currentBoard[r]?.[c];
+              if (piece && piece.player === player) {
+                  const moves = calculatePossibleMoves({ row: r, col: c }, currentBoard);
+                  const captureMoves = moves.filter(m => m.capturedPiece);
+                  if (captureMoves.length > 0) {
+                      allCaptureMoves.push({ piece: { row: r, col: c }, moves: captureMoves });
+                  }
+              }
+          }
+      }
+      return allCaptureMoves;
   };
   
     const calculatePossibleMoves = (piecePosition: Position, currentBoard: Board): Move[] => {
@@ -162,16 +188,16 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     
             // Capture moves
             [-1, 1].forEach(side => {
-                const newRow = row + dir;
-                const newCol = col + side;
-                const jumpRow = row + dir * 2;
-                const jumpCol = col + side * 2;
+                const newRow = row + dir * 2;
+                const newCol = col + side * 2;
+                const betweenRow = row + dir;
+                const betweenCol = col + side;
     
-                if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8 &&
-                    currentBoard[newRow]?.[newCol]?.player &&
-                    currentBoard[newRow][newCol]?.player !== piece.player &&
-                    !currentBoard[jumpRow]?.[jumpCol]) {
-                    moves.push({ to: { row: jumpRow, col: jumpCol }, capturedPiece: { row: newRow, col: newCol } });
+                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 &&
+                    currentBoard[betweenRow]?.[betweenCol]?.player &&
+                    currentBoard[betweenRow][betweenCol]?.player !== piece.player &&
+                    !currentBoard[newRow]?.[newCol]) {
+                    moves.push({ to: { row: newRow, col: newCol }, capturedPiece: { row: betweenRow, col: betweenCol } });
                 }
             });
         }
@@ -181,33 +207,31 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     const possibleMoves = useMemo(() => {
         if (!selectedPiece) return [];
         
-        const allCaptureMoves: {piece: Position, moves: Move[]}[] = [];
-         for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                const piece = board[r]?.[c];
-                if (piece && piece.player === localPlayer) {
-                    const moves = calculatePossibleMoves({ row: r, col: c }, board);
-                    const captureMoves = moves.filter(m => m.capturedPiece);
-                    if(captureMoves.length > 0){
-                        allCaptureMoves.push({piece: {row: r, col: c}, moves: captureMoves});
-                    }
-                }
-            }
-        }
-
+        const mandatoryMoves = getMandatoryMoves(board, localPlayer);
         const movesForSelectedPiece = calculatePossibleMoves(selectedPiece, board);
-        if(allCaptureMoves.length > 0){
-            const capturesForSelected = allCaptureMoves.find(p => p.piece.row === selectedPiece.row && p.piece.col === selectedPiece.col);
-            if (!capturesForSelected) {
-              setSelectedPiece(allCaptureMoves[0].piece);
-              return allCaptureMoves[0].moves;
-            }
+        
+        if (mandatoryMoves.length > 0) {
+            const capturesForSelected = mandatoryMoves.find(p => p.piece.row === selectedPiece.row && p.piece.col === selectedPiece.col);
             return capturesForSelected ? capturesForSelected.moves : [];
         }
 
         return movesForSelectedPiece.filter(m => !m.capturedPiece);
 
     }, [selectedPiece, board, localPlayer]);
+
+    useEffect(() => {
+        if (isMyTurn) {
+            const mandatoryMoves = getMandatoryMoves(board, localPlayer);
+            if (mandatoryMoves.length > 0) {
+                // If only one piece can capture, auto-select it.
+                if (mandatoryMoves.length === 1) {
+                    setSelectedPiece(mandatoryMoves[0].piece);
+                }
+            }
+        } else {
+            setSelectedPiece(null);
+        }
+    }, [isMyTurn, board, localPlayer]);
 
 
   if (!isClient) {
@@ -216,7 +240,6 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     );
   }
 
-  const isMyTurn = currentPlayer === localPlayer && areBothPlayersPresent;
   const renderBoard = boardMapToArray(board);
 
   return (
