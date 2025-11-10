@@ -103,38 +103,76 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
         const piece = currentBoard[row]?.[col];
         if (!piece) return [];
     
-        const moveDirections = (player: 'p1' | 'p2', isKing: boolean): number[] => {
-            if (isKing) return [-1, 1]; // Up and Down
-            return player === 'p1' ? [1] : [-1]; // p1 Down, p2 Up
-        };
+        const player = piece.player;
+        const opponent = player === 'p1' ? 'p2' : 'p1';
     
-        const directions = moveDirections(piece.player, piece.isKing);
+        const directions = piece.isKing
+            ? [{ r: -1, c: -1 }, { r: -1, c: 1 }, { r: 1, c: -1 }, { r: 1, c: 1 }] // King moves
+            : player === 'p1'
+                ? [{ r: 1, c: -1 }, { r: 1, c: 1 }] // p1 moves down
+                : [{ r: -1, c: -1 }, { r: -1, c: 1 }]; // p2 moves up
     
         for (const dir of directions) {
-            // Normal moves
-            [-1, 1].forEach(side => {
-                const newRow = row + dir;
-                const newCol = col + side;
-                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && !currentBoard[newRow]?.[newCol]) {
-                    moves.push({ to: { row: newRow, col: newCol }, capturedPiece: null });
-                }
-            });
+            if (piece.isKing) {
+                // King movement and capture logic
+                let tempRow = row + dir.r;
+                let tempCol = col + dir.c;
     
-            // Capture moves
-            [-1, 1].forEach(side => {
-                const newRow = row + dir * 2;
-                const newCol = col + side * 2;
-                const betweenRow = row + dir;
-                const betweenCol = col + side;
-    
-                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 &&
-                    currentBoard[betweenRow]?.[betweenCol]?.player &&
-                    currentBoard[betweenRow][betweenCol]?.player !== piece.player &&
-                    !currentBoard[newRow]?.[newCol]) {
-                    moves.push({ to: { row: newRow, col: newCol }, capturedPiece: { row: betweenRow, col: betweenCol } });
+                // Movement
+                while (tempRow >= 0 && tempRow < 8 && tempCol >= 0 && tempCol < 8) {
+                    if (currentBoard[tempRow]?.[tempCol] === null) {
+                        moves.push({ to: { row: tempRow, col: tempCol }, capturedPiece: null });
+                        tempRow += dir.r;
+                        tempCol += dir.c;
+                    } else {
+                        break; // Blocked by a piece
+                    }
                 }
-            });
+    
+                // Capture
+                tempRow = row + dir.r;
+                tempCol = col + dir.c;
+                let foundOpponent: Position | null = null;
+    
+                while (tempRow >= 0 && tempRow < 8 && tempCol >= 0 && tempCol < 8) {
+                    const currentPiece = currentBoard[tempRow]?.[tempCol];
+                    if (currentPiece) {
+                        if (currentPiece.player === opponent && !foundOpponent) {
+                            foundOpponent = { row: tempRow, col: tempCol };
+                        } else {
+                            break; // Blocked by another piece or own piece
+                        }
+                    } else if (foundOpponent) {
+                        // We've jumped an opponent, this is a valid capture landing spot
+                        moves.push({ to: { row: tempRow, col: tempCol }, capturedPiece: foundOpponent });
+                    }
+                    tempRow += dir.r;
+                    tempCol += dir.c;
+                }
+    
+            } else {
+                // Regular piece movement
+                const oneStepRow = row + dir.r;
+                const oneStepCol = col + dir.c;
+                if (oneStepRow >= 0 && oneStepRow < 8 && oneStepCol >= 0 && oneStepCol < 8 && !currentBoard[oneStepRow]?.[oneStepCol]) {
+                    moves.push({ to: { row: oneStepRow, col: oneStepCol }, capturedPiece: null });
+                }
+    
+                // Regular piece capture
+                const twoStepsRow = row + dir.r * 2;
+                const twoStepsCol = col + dir.c * 2;
+                const jumpedPiece = currentBoard[oneStepRow]?.[oneStepCol];
+    
+                if (
+                    twoStepsRow >= 0 && twoStepsRow < 8 && twoStepsCol >= 0 && twoStepsCol < 8 &&
+                    jumpedPiece && jumpedPiece.player === opponent &&
+                    !currentBoard[twoStepsRow]?.[twoStepsCol]
+                ) {
+                    moves.push({ to: { row: twoStepsRow, col: twoStepsCol }, capturedPiece: { row: oneStepRow, col: oneStepCol } });
+                }
+            }
         }
+    
         return moves;
     }, []);
 
@@ -264,21 +302,20 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                     const mandatoryMoves = getMandatoryMoves(currentBoard, botPlayerKey!);
                     let pieceToMove: Position;
                     let movesForPiece: Move[];
-                    let isCaptureMove = false;
     
                     if (pieceToMoveAfterCapture) {
                         pieceToMove = pieceToMoveAfterCapture;
-                        movesForPiece = calculatePossibleMoves(pieceToMove, currentBoard).filter(m => m.capturedPiece);
-                        if (movesForPiece.length === 0) {
+                        const subsequentCaptures = calculatePossibleMoves(pieceToMove, currentBoard).filter(m => m.capturedPiece);
+                        if (subsequentCaptures.length > 0) {
+                            movesForPiece = subsequentCaptures;
+                        } else {
                             continueTurn = false; // No more captures, end turn
                             break;
                         }
-                        isCaptureMove = true;
                     } else if (mandatoryMoves.length > 0) {
                         const randomChoice = mandatoryMoves[Math.floor(Math.random() * mandatoryMoves.length)];
                         pieceToMove = randomChoice.piece;
                         movesForPiece = randomChoice.moves;
-                        isCaptureMove = true;
                     } else {
                         const allBotPieces: Position[] = [];
                         for(let r = 0; r < 8; r++){
@@ -317,10 +354,11 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                     finalNextTurn = nextTurn; // Keep track of the final turn owner
                     
                     // Decide if the bot's turn should continue
-                    if (isCaptureMove && nextTurn === gameSession.botPlayer.id) {
+                    if (bestMove.capturedPiece && nextTurn === gameSession.botPlayer.id) {
                         pieceToMoveAfterCapture = pieceAtEnd;
                         continueTurn = true; // There might be more captures
                     } else {
+                        pieceToMoveAfterCapture = null;
                         continueTurn = false; // Turn ends after a non-capture move or when turn switches
                     }
                 }
@@ -404,4 +442,5 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     </div>
   );
 }
+
 
