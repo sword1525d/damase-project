@@ -2,23 +2,16 @@
   "name": "Dama-se",
   "short_name": "Dama-se",
   "description": "Um jogo de damas online moderno e multiplataforma.",
-  "icons": [
-    {
-      "src": "/icon.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ],
-  "theme_color": "#facc15",
-  "background_color": "#172131",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "background_color": "#172131",
+  "theme_color": "#17213_blank",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }
