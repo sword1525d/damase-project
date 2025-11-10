@@ -7,7 +7,7 @@ import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { collection, query, where, doc } from 'firebase/firestore';
-import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil, Image as ImageIcon } from "lucide-react";
+import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil, Image as ImageIcon, ArrowLeft } from "lucide-react";
 import { RecentGames } from "@/components/lobby/RecentGames";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -121,11 +121,14 @@ export default function ProfilePage() {
     return (
         <div className="flex flex-col items-center p-4 md:p-8 bg-background min-h-screen text-foreground">
              <div className="w-full max-w-4xl">
-                 <Button asChild variant="link" className="mb-4">
-                    <Link href="/dashboard">
-                        &larr; Voltar para o Lobby
-                    </Link>
-                </Button>
+                <div className="flex justify-start mb-4">
+                    <Button asChild variant="ghost" size="icon">
+                        <Link href="/dashboard">
+                            <ArrowLeft />
+                            <span className="sr-only">Voltar para o Lobby</span>
+                        </Link>
+                    </Button>
+                </div>
                 <Card className="w-full border-2 border-border shadow-2xl">
                     <CardHeader className="text-center items-center space-y-4 p-6">
                         <Dialog open={isEditAvatarModalOpen} onOpenChange={setIsEditAvatarModalOpen}>
