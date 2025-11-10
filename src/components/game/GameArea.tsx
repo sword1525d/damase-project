@@ -196,6 +196,7 @@ export function GameArea({ gameId }: { gameId: string }) {
     );
   }
 
+  if (gameStatus === 'active') {
     return (
       <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 items-center justify-center relative">
         <PlayerInfo playerId={user?.uid} opponentId={opponentId} gameSession={gameSession} />
@@ -224,6 +225,15 @@ export function GameArea({ gameId }: { gameId: string }) {
           </AlertDialog>
       </div>
     );
-}
+  }
 
-    
+  // Fallback for any other state
+  return (
+    <div className="flex-1 flex items-center justify-center text-center p-4">
+        <div className="flex flex-col items-center gap-4">
+            <LoadingAnimation />
+            <p className="text-muted-foreground">Carregando partida...</p>
+        </div>
+    </div>
+  );
+}
