@@ -1,4 +1,3 @@
-
 'use server';
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -71,7 +70,7 @@ const botMovePrompt = ai.definePrompt({
         3.  **Strategic Priority (if no captures exist):**
             a.  Prioritize moves that lead to your piece becoming a king (reaching the opponent's back row).
             b.  Prioritize moves that place your piece in a safe position (e.g., on the side of the board or where it cannot be immediately jumped).
-            c.  Prioritize moves that block the opponent's key pieces.
+            b.  Prioritize moves that block the opponent's key pieces.
             d.  As a lower priority, move pieces from your back row forward into the game.
 
         Based on your analysis, select the single best move from the 'possibleMoves' list and return it in the 'bestMove' field.
@@ -90,7 +89,7 @@ const botMoveFlow = ai.defineFlow(
         return { bestMove: input.possibleMoves[0] };
     }
 
-    const { output } = await botMovePrompt(input);
+    const { output } = await botMovePrompt({ ...input });
     return output!;
   }
 );
