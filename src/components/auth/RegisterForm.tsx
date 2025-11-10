@@ -18,6 +18,7 @@ import { useAuth, useUser, useFirestore } from "@/firebase";
 import { initiateEmailSignUp } from "@/firebase/non-blocking-login";
 import React, { useEffect, useState } from "react";
 import { doc, getDoc, setDoc, runTransaction } from "firebase/firestore";
+import { LoadingAnimation } from "../game/LoadingAnimation";
 
 
 async function getNextNumericId(firestore: any) {
@@ -85,7 +86,7 @@ export function RegisterForm() {
   if (isUserLoading || user) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
-        <Crown className="w-16 h-16 text-primary animate-spin" />
+        <LoadingAnimation />
       </div>
     )
   }

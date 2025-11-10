@@ -5,8 +5,8 @@ import { MobileNav } from "@/components/game/MobileNav";
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Crown } from "lucide-react";
 import { Lobby } from "@/components/lobby/Lobby";
+import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -21,7 +21,7 @@ export default function DashboardPage() {
   if (isUserLoading || !user) {
     return (
       <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
-        <Crown className="w-16 h-16 text-primary animate-spin" />
+        <LoadingAnimation />
       </div>
     );
   }

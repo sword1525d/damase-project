@@ -5,11 +5,12 @@ import { GameArea } from "@/components/game/GameArea";
 import { MobileNav } from "@/components/game/MobileNav";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/firebase";
-import { ArrowLeft, Crown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Image from 'next/image';
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 
 export default function GamePage() {
   const { user, isUserLoading } = useUser();
@@ -26,7 +27,7 @@ export default function GamePage() {
   if (isUserLoading || !user) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
-        <Crown className="w-16 h-16 text-primary animate-spin" />
+        <LoadingAnimation />
       </div>
     );
   }

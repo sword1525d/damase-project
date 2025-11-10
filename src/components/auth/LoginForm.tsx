@@ -18,6 +18,7 @@ import { useAuth, useUser, useFirestore } from "@/firebase";
 import { initiateEmailSignIn, initiateGoogleSignIn } from "@/firebase/non-blocking-login";
 import React, { useEffect, useState } from "react";
 import { doc, getDoc, setDoc, runTransaction } from "firebase/firestore";
+import { LoadingAnimation } from "../game/LoadingAnimation";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -98,7 +99,7 @@ export function LoginForm() {
   if (isUserLoading || user) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
-        <Crown className="w-16 h-16 text-primary animate-spin" />
+        <LoadingAnimation />
       </div>
     )
   }
