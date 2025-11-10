@@ -43,7 +43,7 @@ export default function GamePage() {
         </Button>
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <Crown className="h-6 w-6 text-primary" />
-          <span className="hidden sm:inline-block text-lg">Dama-se</span>
+          <span className="text-lg">Dama-se</span>
         </Link>
       </header>
         <div className="grid h-[calc(100vh-4rem)] grid-cols-1 xl:grid-cols-[3fr_1fr]">
