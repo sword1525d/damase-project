@@ -17,14 +17,8 @@ export function MobileNav({ isFriendsSheetOpen, onFriendsSheetChange }: MobileNa
     const isGamePage = pathname.includes('/game/');
 
     return (
-        <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center lg:hidden">
+        <div className="absolute top-4 left-4 right-4 z-10 flex justify-end items-center lg:hidden">
             <Sheet open={isFriendsSheetOpen} onOpenChange={onFriendsSheetChange}>
-                <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm">
-                        <Users className="w-4 h-4 mr-2" />
-                        Amigos
-                    </Button>
-                </SheetTrigger>
                 <SheetContent side="left" className="p-0 pt-10 w-[300px] bg-card/95 backdrop-blur-sm border-r">
                     <VisuallyHidden>
                       <SheetTitle>Painel de Amigos</SheetTitle>
