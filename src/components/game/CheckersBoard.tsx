@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -255,26 +256,29 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
             const runBotMove = async () => {
                 setIsBotThinking(true);
                 let currentBoard = JSON.parse(JSON.stringify(board)); // Work on a copy
-                let botPlayerId = gameSession.turn;
+                let finalNextTurn = gameSession.turn;
+                let continueTurn = true;
                 let pieceToMoveAfterCapture: Position | null = null;
-                let finalNextTurn = botPlayerId;
-
-                while(botPlayerId === gameSession.botPlayer.id) {
-                    const mandatoryMoves = getMandatoryMoves(currentBoard, botPlayerKey);
+    
+                while(continueTurn) {
+                    const mandatoryMoves = getMandatoryMoves(currentBoard, botPlayerKey!);
                     let pieceToMove: Position;
                     let movesForPiece: Move[];
-
+                    let isCaptureMove = false;
+    
                     if (pieceToMoveAfterCapture) {
                         pieceToMove = pieceToMoveAfterCapture;
                         movesForPiece = calculatePossibleMoves(pieceToMove, currentBoard).filter(m => m.capturedPiece);
                         if (movesForPiece.length === 0) {
-                            finalNextTurn = gameSession.player1Id; // End of bot's capture chain turn
-                            break; 
+                            continueTurn = false; // No more captures, end turn
+                            break;
                         }
+                        isCaptureMove = true;
                     } else if (mandatoryMoves.length > 0) {
                         const randomChoice = mandatoryMoves[Math.floor(Math.random() * mandatoryMoves.length)];
                         pieceToMove = randomChoice.piece;
                         movesForPiece = randomChoice.moves;
+                        isCaptureMove = true;
                     } else {
                         const allBotPieces: Position[] = [];
                         for(let r = 0; r < 8; r++){
@@ -286,7 +290,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                         }
                         const piecesWithMoves = allBotPieces.map(p => ({piece: p, moves: calculatePossibleMoves(p, currentBoard).filter(m => !m.capturedPiece)})).filter(p => p.moves.length > 0);
                         if(piecesWithMoves.length === 0) {
-                            finalNextTurn = gameSession.player1Id; // Bot has no moves, player 1 wins.
+                            continueTurn = false; // No moves available
                             break;
                         }
                         
@@ -300,24 +304,24 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                         bestMove = movesForPiece[0];
                     } else {
                          try {
-                            const response = await getBotMove({ possibleMoves: movesForPiece, botPlayerKey });
+                            const response = await getBotMove({ possibleMoves: movesForPiece, botPlayerKey: botPlayerKey! });
                             bestMove = response.bestMove;
                         } catch (error) {
                             console.error("AI failed, picking random move:", error);
                             bestMove = movesForPiece[Math.floor(Math.random() * movesForPiece.length)];
                         }
                     }
-
+    
                     const { newBoard, nextTurn, pieceAtEnd } = await performMove(pieceToMove, bestMove, currentBoard);
-                    currentBoard = newBoard;
-                    botPlayerId = nextTurn;
-                    finalNextTurn = nextTurn;
-                    pieceToMoveAfterCapture = (botPlayerId === gameSession.botPlayer.id && pieceAtEnd) ? pieceAtEnd : null;
-
-                    // Add a small delay for visual effect of chained captures
-                    if (botPlayerId === gameSession.botPlayer.id) {
-                       setBoard(currentBoard); // Show intermediate state
-                       await new Promise(resolve => setTimeout(resolve, 500));
+                    currentBoard = newBoard; // Update board state for the next loop iteration
+                    finalNextTurn = nextTurn; // Keep track of the final turn owner
+                    
+                    // Decide if the bot's turn should continue
+                    if (isCaptureMove && nextTurn === gameSession.botPlayer.id) {
+                        pieceToMoveAfterCapture = pieceAtEnd;
+                        continueTurn = true; // There might be more captures
+                    } else {
+                        continueTurn = false; // Turn ends after a non-capture move or when turn switches
                     }
                 }
                 
@@ -329,15 +333,16 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                     gameUpdate.status = 'completed';
                     gameUpdate.endTime = new Date().toISOString();
                 }
-
+    
                 await updateDocumentNonBlocking(gameSessionRef, gameUpdate);
                 setIsBotThinking(false);
             };
-
+    
             // Delay bot move slightly for better UX
-            setTimeout(runBotMove, 1000);
+            const timeoutId = setTimeout(runBotMove, 1000);
+            return () => clearTimeout(timeoutId);
         }
-    }, [isBotTurn, gameSession.turn, board, botPlayerKey, gameSessionRef, performMove, calculatePossibleMoves, gameSession.botPlayer?.id, gameSession.player1Id]);
+    }, [isBotTurn, gameSession.turn, board, botPlayerKey, gameSessionRef, performMove, calculatePossibleMoves, gameSession.botPlayer?.id]);
 
 
   if (!isClient) {
@@ -399,3 +404,4 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     </div>
   );
 }
+
