@@ -2,12 +2,15 @@
 'use client';
 import { PlayerInfo } from "./PlayerInfo";
 import { CheckersBoard } from "./CheckersBoard";
-import { useFirestore, useDoc, useUser, useMemoFirebase } from "@/firebase";
+import { useFirestore, useDoc, useUser, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
-import { Trophy } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
+import { useEffect } from "react";
+import { cn } from "@/lib/utils";
+
 
 export function GameArea({ gameId }: { gameId: string }) {
   const firestore = useFirestore();
@@ -21,6 +24,22 @@ export function GameArea({ gameId }: { gameId: string }) {
   
   const { data: gameSession, isLoading } = useDoc(gameSessionRef);
 
+  // Set user as present in the game
+  useEffect(() => {
+    if (gameSessionRef && user) {
+        const presenceUpdate: { [key: string]: boolean } = {};
+        presenceUpdate[`presentPlayers.${user.uid}`] = true;
+        updateDocumentNonBlocking(gameSessionRef, presenceUpdate);
+
+        return () => {
+             const absenceUpdate: { [key: string]: boolean } = {};
+             absenceUpdate[`presentPlayers.${user.uid}`] = false;
+             updateDocumentNonBlocking(gameSessionRef, absenceUpdate);
+        }
+    }
+  }, [gameSessionRef, user]);
+
+
   const player1Id = gameSession?.player1Id;
   const player2Id = gameSession?.player2Id;
 
@@ -28,12 +47,13 @@ export function GameArea({ gameId }: { gameId: string }) {
   const isMyTurn = gameSession?.turn === user?.uid;
   const gameStatus = gameSession?.status;
 
+  const areBothPlayersPresent = !!(gameSession?.presentPlayers?.[player1Id] && gameSession?.presentPlayers?.[player2Id]);
+
   if (isLoading || !gameSession) {
     return (
         <div className="flex-1 flex items-center justify-center text-center p-4">
             <div className="flex flex-col items-center gap-4">
                 <LoadingAnimation />
-                <p className="text-muted-foreground">Carregando jogo...</p>
             </div>
       </div>
     )
@@ -50,6 +70,26 @@ export function GameArea({ gameId }: { gameId: string }) {
         </div>
     )
   }
+
+  if (!areBothPlayersPresent && gameStatus !== 'completed') {
+     return (
+        <div className="flex-1 flex items-center justify-center text-center p-4">
+            <div className="flex flex-col items-center gap-6">
+                <div className="relative">
+                    <Users className="w-24 h-24 text-muted-foreground" strokeWidth={0.5} />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <LoadingAnimation />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-3xl font-bold">Aguardando oponente...</h2>
+                    <p className="text-muted-foreground">A partida começará assim que o outro jogador se conectar.</p>
+                </div>
+            </div>
+        </div>
+    )
+  }
+
 
   if (gameStatus === 'completed') {
     const isWinner = gameSession.winnerId === user?.uid;
@@ -73,7 +113,7 @@ export function GameArea({ gameId }: { gameId: string }) {
 
   return (
     <div className="flex-1 flex flex-col p-4 pt-20 md:p-6 lg:p-8 items-center justify-center">
-      <PlayerInfo playerId={user?.uid} opponentId={opponentId} isMyTurn={isMyTurn} />
+      <PlayerInfo playerId={user?.uid} opponentId={opponentId} isMyTurn={isMyTurn} bothPlayersPresent={areBothPlayersPresent} />
       <CheckersBoard gameSession={gameSession} gameSessionRef={gameSessionRef} />
     </div>
   );

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserAccount": {
@@ -149,6 +150,13 @@
           "description": "Array of moves made during the game session, formatted as a string.",
           "items": {
             "type": "string"
+          }
+        },
+        "presentPlayers": {
+          "type": "object",
+          "description": "A map to track which players are currently connected to the game session.",
+          "additionalProperties": {
+            "type": "boolean"
           }
         }
       },

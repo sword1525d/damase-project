@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,11 +13,12 @@ interface PlayerInfoProps {
   playerId?: string;
   opponentId?: string;
   isMyTurn?: boolean;
+  bothPlayersPresent?: boolean;
 }
 
 const TURN_DURATION = 30; // 30 segundos
 
-function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlayer: boolean, isMyTurn?: boolean }) {
+function PlayerDetails({ userId, isPlayer, isMyTurn, bothPlayersPresent }: { userId?: string, isPlayer: boolean, isMyTurn?: boolean, bothPlayersPresent?: boolean }) {
   const firestore = useFirestore();
   const [timer, setTimer] = useState(TURN_DURATION);
 
@@ -28,7 +30,7 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isMyTurn) {
+    if (isMyTurn && bothPlayersPresent) {
       setTimer(TURN_DURATION);
       interval = setInterval(() => {
         setTimer(prev => {
@@ -45,7 +47,7 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
     }
 
     return () => clearInterval(interval);
-  }, [isMyTurn]);
+  }, [isMyTurn, bothPlayersPresent]);
 
   const timerProgress = (timer / TURN_DURATION) * 100;
 
@@ -77,23 +79,23 @@ function PlayerDetails({ userId, isPlayer, isMyTurn }: { userId?: string, isPlay
                 </div>
             </div>
         </div>
-        <Progress value={isMyTurn ? timerProgress : 0} className={`w-full h-1.5 transition-all duration-1000 ease-linear ${isMyTurn ? '' : 'opacity-0'}`} />
+        <Progress value={(isMyTurn && bothPlayersPresent) ? timerProgress : 0} className={`w-full h-1.5 transition-all duration-1000 ease-linear ${(isMyTurn && bothPlayersPresent) ? '' : 'opacity-0'}`} />
     </div>
   );
 }
 
 
-export function PlayerInfo({ playerId, opponentId, isMyTurn }: PlayerInfoProps) {
+export function PlayerInfo({ playerId, opponentId, isMyTurn, bothPlayersPresent }: PlayerInfoProps) {
   return (
     <div className="w-full max-w-2xl mx-auto mb-4">
        <div className="grid grid-cols-[1fr_auto_1fr] items-start p-2 md:p-4 bg-card rounded-lg shadow-md gap-2 md:gap-4">
-        <PlayerDetails userId={opponentId} isPlayer={false} isMyTurn={!isMyTurn} />
+        <PlayerDetails userId={opponentId} isPlayer={false} isMyTurn={!isMyTurn} bothPlayersPresent={bothPlayersPresent} />
         
         <div className="text-center">
             <h2 className="text-lg md:text-xl font-bold text-accent">VS</h2>
         </div>
 
-        <PlayerDetails userId={playerId} isPlayer={true} isMyTurn={isMyTurn} />
+        <PlayerDetails userId={playerId} isPlayer={true} isMyTurn={isMyTurn} bothPlayersPresent={bothPlayersPresent} />
       </div>
     </div>
   );

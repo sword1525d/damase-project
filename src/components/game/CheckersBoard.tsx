@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -58,6 +59,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
 
   const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
   const localPlayer = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
+  const areBothPlayersPresent = !!(gameSession?.presentPlayers?.[gameSession?.player1Id] && gameSession?.presentPlayers?.[gameSession?.player2Id]);
 
 
   useEffect(() => {
@@ -89,7 +91,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
 
   const handleSquareClick = (row: number, col: number) => {
     if (!gameSessionRef) return;
-    if (currentPlayer !== localPlayer) return;
+    if (currentPlayer !== localPlayer || !areBothPlayersPresent) return;
 
     const clickedPiece = board[row]?.[col];
     const targetMove = possibleMoves.find(move => move.to.row === row && move.to.col === col);
@@ -214,7 +216,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     );
   }
 
-  const isMyTurn = currentPlayer === localPlayer;
+  const isMyTurn = currentPlayer === localPlayer && areBothPlayersPresent;
   const renderBoard = boardMapToArray(board);
 
   return (
