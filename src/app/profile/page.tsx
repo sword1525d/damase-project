@@ -7,13 +7,15 @@ import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { collection, query, where, doc } from 'firebase/firestore';
-import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil } from "lucide-react";
+import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil, Image as ImageIcon } from "lucide-react";
 import { RecentGames } from "@/components/lobby/RecentGames";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 function StatCard({ icon, title, value }: { icon: React.ReactNode, title: string, value: number | string }) {
     return (
@@ -31,8 +33,14 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const router = useRouter();
     const firestore = useFirestore();
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
+    const [isEditAvatarModalOpen, setIsEditAvatarModalOpen] = useState(false);
     const [newDisplayName, setNewDisplayName] = useState('');
+    const [selectedAvatar, setSelectedAvatar] = useState('');
+
+    const isGoogleProvider = user?.providerData.some(p => p.providerId === 'google.com');
+    const portraitImages = ['/portraits/1.jpg', '/portraits/2.jpg', '/portraits/3.jpg', '/portraits/4.jpg', '/portraits/5.jpg'];
+    const googlePhotoUrl = user?.photoURL;
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -56,6 +64,7 @@ export default function ProfilePage() {
     useEffect(() => {
         if (userProfile) {
             setNewDisplayName(userProfile.displayName);
+            setSelectedAvatar(userProfile.avatarUrl);
         }
     }, [userProfile]);
 
@@ -84,10 +93,17 @@ export default function ProfilePage() {
         return { wins, losses, draws, total };
     }, [gamesAsPlayer1, gamesAsPlayer2, user]);
 
-    const handleSave = () => {
+    const handleSaveName = () => {
         if (newDisplayName.trim() && userProfileRef) {
             updateDocumentNonBlocking(userProfileRef, { displayName: newDisplayName.trim() });
-            setIsModalOpen(false);
+            setIsEditNameModalOpen(false);
+        }
+    }
+
+    const handleSaveAvatar = () => {
+        if (selectedAvatar && userProfileRef) {
+            updateDocumentNonBlocking(userProfileRef, { avatarUrl: selectedAvatar });
+            setIsEditAvatarModalOpen(false);
         }
     }
 
@@ -98,7 +114,8 @@ export default function ProfilePage() {
             </div>
         );
     }
-
+    
+    const avatarOptions = (isGoogleProvider && googlePhotoUrl) ? [googlePhotoUrl, ...portraitImages] : portraitImages;
     const registrationDate = userAccount.registrationDate ? new Date(userAccount.registrationDate).toLocaleDateString('pt-BR') : 'N/A';
 
     return (
@@ -111,14 +128,55 @@ export default function ProfilePage() {
                 </Button>
                 <Card className="w-full border-2 border-border shadow-2xl">
                     <CardHeader className="text-center items-center space-y-4 p-6">
-                        <Avatar className="w-24 h-24 border-4 border-primary">
-                            <AvatarImage src={userProfile.avatarUrl} alt={userProfile.displayName} data-ai-hint="avatar" />
-                            <AvatarFallback>{userProfile.displayName?.substring(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
+                        <Dialog open={isEditAvatarModalOpen} onOpenChange={setIsEditAvatarModalOpen}>
+                            <DialogTrigger asChild>
+                                 <div className="relative group cursor-pointer">
+                                    <Avatar className="w-24 h-24 border-4 border-primary">
+                                        <AvatarImage src={userProfile.avatarUrl} alt={userProfile.displayName} data-ai-hint="avatar" />
+                                        <AvatarFallback>{userProfile.displayName?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                                        <ImageIcon className="w-8 h-8 text-white" />
+                                    </div>
+                                </div>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Editar Avatar</DialogTitle>
+                                    <DialogDescription>
+                                       Selecione uma nova imagem de perfil.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid grid-cols-3 gap-4 py-4">
+                                   {avatarOptions.map(url => (
+                                        <div key={url} className="relative cursor-pointer" onClick={() => setSelectedAvatar(url)}>
+                                            <Image 
+                                                src={url} 
+                                                alt="Avatar option" 
+                                                width={100} 
+                                                height={100} 
+                                                className={cn(
+                                                    "rounded-full aspect-square object-cover",
+                                                    selectedAvatar === url && "ring-4 ring-primary ring-offset-2 ring-offset-background"
+                                                )}
+                                            />
+                                        </div>
+                                   ))}
+                                </div>
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button type="button" variant="secondary">
+                                            Cancelar
+                                        </Button>
+                                    </DialogClose>
+                                    <Button type="button" onClick={handleSaveAvatar}>Salvar alterações</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                         <div>
                              <div className="flex items-center gap-2 justify-center">
                                 <CardTitle className="text-3xl font-bold">{userProfile.displayName}</CardTitle>
-                                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                                <Dialog open={isEditNameModalOpen} onOpenChange={setIsEditNameModalOpen}>
                                     <DialogTrigger asChild>
                                         <Button size="icon" variant="ghost">
                                             <Pencil className="w-5 h-5" />
@@ -150,7 +208,7 @@ export default function ProfilePage() {
                                                     Cancelar
                                                 </Button>
                                             </DialogClose>
-                                            <Button type="button" onClick={handleSave}>Salvar alterações</Button>
+                                            <Button type="button" onClick={handleSaveName}>Salvar alterações</Button>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
