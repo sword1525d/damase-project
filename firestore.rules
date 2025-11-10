@@ -44,12 +44,14 @@ service cloud.firestore {
     match /friendships/{friendshipId} {
       allow read, update, delete: if request.auth != null && resource.data.members[request.auth.uid] == true;
       allow create: if request.auth != null;
+      allow list: if request.auth != null;
     }
     
     // Game sessions can be managed by members.
     match /game_sessions/{gameSessionId} {
-      allow read, update, delete: if request.auth != null && resource.data.members[request.auth.uid] == true;
       allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && resource.data.members[request.auth.uid] == true;
+      allow list: if request.auth != null && request.query.where.get('members.' + request.auth.uid, false) == true;
 
        // Messages can be accessed by game members.
       match /messages/{messageId} {
