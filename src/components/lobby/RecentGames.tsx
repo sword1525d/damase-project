@@ -7,6 +7,7 @@ import { Crown, Swords, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useMemo } from 'react';
 
 function GameResult({ game }: { game: any }) {
     const { user } = useUser();
@@ -61,18 +62,43 @@ export function RecentGames() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const recentGamesQuery = useMemoFirebase(() => {
-        if(!user) return null;
+    // Query for games where user is player1
+    const gamesAsPlayer1Query = useMemoFirebase(() => {
+        if (!user) return null;
         return query(
             collection(firestore, 'game_sessions'),
-            where('members.' + user.uid, '==', true),
+            where('player1Id', '==', user.uid),
             where('status', '==', 'completed'),
             orderBy('endTime', 'desc'),
             limit(5)
         );
     }, [firestore, user]);
 
-    const { data: games, isLoading } = useCollection(recentGamesQuery);
+    // Query for games where user is player2
+    const gamesAsPlayer2Query = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(
+            collection(firestore, 'game_sessions'),
+            where('player2Id', '==', user.uid),
+            where('status', '==', 'completed'),
+            orderBy('endTime', 'desc'),
+            limit(5)
+        );
+    }, [firestore, user]);
+
+    const { data: games1, isLoading: isLoading1 } = useCollection(gamesAsPlayer1Query);
+    const { data: games2, isLoading: isLoading2 } = useCollection(gamesAsPlayer2Query);
+
+    const games = useMemo(() => {
+        const allGames = [...(games1 || []), ...(games2 || [])];
+        // Remove duplicates in case a user plays against themselves (unlikely but safe)
+        const uniqueGames = Array.from(new Map(allGames.map(game => [game.id, game])).values());
+        // Sort by endTime and take the latest 5
+        return uniqueGames.sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()).slice(0, 5);
+    }, [games1, games2]);
+
+    const isLoading = isLoading1 || isLoading2;
+
 
     return (
         <Card className="w-full">
