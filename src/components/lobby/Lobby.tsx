@@ -16,7 +16,7 @@ export function Lobby() {
                 <CardContent className="space-y-4">
                     <Button className="w-full h-16 text-lg" size="lg">
                         <Swords className="mr-2 h-6 w-6" />
-                        Encontrar Partida Aleatória
+                        Partida Aleatória
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">Ou convide um amigo da lista à esquerda.</p>
                 </CardContent>
