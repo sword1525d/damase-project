@@ -62,10 +62,11 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const isBotGame = !!gameSession?.botPlayer;
   const botPlayerKey = gameSession?.botPlayer?.playerKey;
   const isBotTurn = isBotGame && gameSession?.turn === gameSession?.botPlayer?.id;
-  const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
-  const localPlayer = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
-  const isMyTurn = (gameSession?.status === 'active' || gameSession?.status === 'ready') && currentPlayer === localPlayer;
-
+  
+  const currentPlayerKey = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
+  const localPlayerKey = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
+  
+  const isMyTurn = (gameSession?.status === 'active' || gameSession?.status === 'ready') && currentPlayerKey === localPlayerKey;
 
   useEffect(() => {
     setIsClient(true);
@@ -188,9 +189,9 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
         const canCaptureAgain = targetMove.capturedPiece && calculatePossibleMoves({row, col}, newBoard).some(m => m.capturedPiece);
         setSelectedPiece(canCaptureAgain ? {row, col} : null);
 
-    } else if (clickedPiece && clickedPiece.player === localPlayer) {
+    } else if (clickedPiece && clickedPiece.player === localPlayerKey) {
       // Force selection of capturing piece if available
-      const mandatoryMoves = getMandatoryMoves(board, localPlayer);
+      const mandatoryMoves = getMandatoryMoves(board, localPlayerKey);
       if (mandatoryMoves.length > 0 && !mandatoryMoves.some(m => m.piece.row === row && m.piece.col === col)) {
         setSelectedPiece(mandatoryMoves[0].piece);
       } else {
@@ -221,7 +222,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     const possibleMoves = useMemo(() => {
         if (!selectedPiece) return [];
         
-        const mandatoryMoves = getMandatoryMoves(board, localPlayer);
+        const mandatoryMoves = getMandatoryMoves(board, localPlayerKey);
         const movesForSelectedPiece = calculatePossibleMoves(selectedPiece, board);
         
         if (mandatoryMoves.length > 0) {
@@ -231,11 +232,11 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
 
         return movesForSelectedPiece.filter(m => !m.capturedPiece);
 
-    }, [selectedPiece, board, localPlayer, calculatePossibleMoves]);
+    }, [selectedPiece, board, localPlayerKey, calculatePossibleMoves]);
 
     useEffect(() => {
         if (isMyTurn) {
-            const mandatoryMoves = getMandatoryMoves(board, localPlayer);
+            const mandatoryMoves = getMandatoryMoves(board, localPlayerKey);
             if (mandatoryMoves.length > 0) {
                 // If only one piece can capture, auto-select it.
                 if (mandatoryMoves.length === 1) {
@@ -245,7 +246,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
         } else {
             setSelectedPiece(null);
         }
-    }, [isMyTurn, board, localPlayer]);
+    }, [isMyTurn, board, localPlayerKey]);
     
     // Bot move logic
     useEffect(() => {
@@ -257,21 +258,16 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                 let botPlayerId = gameSession.turn;
                 let pieceToMoveAfterCapture: Position | null = null;
 
-                // Make the first move to transition status from 'ready' to 'active'
-                if (gameSession.status === 'ready') {
-                    const firstMoveUpdate: any = { status: 'active' };
-                    await updateDocumentNonBlocking(gameSessionRef, firstMoveUpdate);
-                }
-
                 while(botPlayerId === gameSession.botPlayer.id) {
                     const mandatoryMoves = getMandatoryMoves(currentBoard, botPlayerKey);
                     let pieceToMove: Position;
                     let movesForPiece: Move[];
+                    let bestMove: Move;
 
                     if (pieceToMoveAfterCapture) {
                         pieceToMove = pieceToMoveAfterCapture;
                         movesForPiece = calculatePossibleMoves(pieceToMove, currentBoard).filter(m => m.capturedPiece);
-                         if (movesForPiece.length === 0) break; 
+                         if (movesForPiece.length === 0) break; // No more captures, end turn
                     } else if (mandatoryMoves.length > 0) {
                         const randomChoice = mandatoryMoves[Math.floor(Math.random() * mandatoryMoves.length)];
                         pieceToMove = randomChoice.piece;
@@ -286,30 +282,43 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                             }
                         }
                         const piecesWithMoves = allBotPieces.map(p => ({piece: p, moves: calculatePossibleMoves(p, currentBoard).filter(m => !m.capturedPiece)})).filter(p => p.moves.length > 0);
-                        if(piecesWithMoves.length === 0) break; 
+                        if(piecesWithMoves.length === 0) break; // No moves left, game over
+                        
                         const randomChoice = piecesWithMoves[Math.floor(Math.random() * piecesWithMoves.length)];
                         pieceToMove = randomChoice.piece;
                         movesForPiece = randomChoice.moves;
                     }
 
-                    const botInput: BotMoveInput = {
-                        board: currentBoard,
-                        possibleMoves: movesForPiece,
-                        botPlayerKey: botPlayerKey,
-                        botPiecePosition: pieceToMove,
-                    };
-
-                    const response = await getBotMove(botInput);
-                    const bestMove = response.bestMove;
+                    // --- Simplified Bot Logic ---
+                    if (movesForPiece.length === 1) {
+                        bestMove = movesForPiece[0];
+                    } else {
+                        // If more than one move, ask the AI
+                        const botInput: BotMoveInput = {
+                            possibleMoves: movesForPiece,
+                            botPlayerKey: botPlayerKey,
+                        };
+                        try {
+                            const response = await getBotMove(botInput);
+                            bestMove = response.bestMove;
+                        } catch (error) {
+                            console.error("AI failed to provide a move, picking randomly.", error);
+                            // Fallback to a random move if AI fails
+                            bestMove = movesForPiece[Math.floor(Math.random() * movesForPiece.length)];
+                        }
+                    }
+                    // --- End of Simplified Bot Logic ---
 
                     const { newBoard, nextTurn, pieceAtEnd } = await performMove(pieceToMove, bestMove, currentBoard);
                     currentBoard = newBoard;
                     botPlayerId = nextTurn;
                     pieceToMoveAfterCapture = (botPlayerId === gameSession.botPlayer.id && pieceAtEnd) ? pieceAtEnd : null;
                     
+                    // Update board state for visual feedback, especially for chained captures.
+                    await updateDocumentNonBlocking(gameSessionRef, { board: currentBoard });
+
                     // Add a small delay between chained captures for visual effect
                     if (botPlayerId === gameSession.botPlayer.id) {
-                       await updateDocumentNonBlocking(gameSessionRef, { board: currentBoard });
                        await new Promise(resolve => setTimeout(resolve, 800));
                     }
                 }
@@ -330,7 +339,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
             // Delay bot move slightly for better UX
             setTimeout(runBotMove, 1000);
         }
-    }, [isBotTurn, board, botPlayerKey, gameSessionRef, performMove, calculatePossibleMoves, gameSession.botPlayer?.id, gameSession.status]);
+    }, [isBotTurn, board, botPlayerKey, gameSessionRef, performMove, calculatePossibleMoves, gameSession.botPlayer?.id]);
 
 
   if (!isClient) {
