@@ -7,7 +7,7 @@ import { LoadingAnimation } from "@/components/game/LoadingAnimation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { collection, query, where, doc } from 'firebase/firestore';
-import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil, Image as ImageIcon, ArrowLeft } from "lucide-react";
+import { Crown, Swords, Handshake, CalendarDays, Trophy, BarChart3, Mail, Pencil, Image as ImageIcon, ArrowLeft, Star } from "lucide-react";
 import { RecentGames } from "@/components/lobby/RecentGames";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 
 function StatCard({ icon, title, value }: { icon: React.ReactNode, title: string, value: number | string }) {
     return (
@@ -117,6 +118,7 @@ export default function ProfilePage() {
     
     const avatarOptions = (isGoogleProvider && googlePhotoUrl) ? [googlePhotoUrl, ...portraitImages] : portraitImages;
     const registrationDate = userAccount.registrationDate ? new Date(userAccount.registrationDate).toLocaleDateString('pt-BR') : 'N/A';
+    const xpProgress = (userProfile.xp / 100) * 100;
 
     return (
         <div className="flex flex-col items-center p-4 md:p-8 bg-background min-h-screen text-foreground">
@@ -214,9 +216,20 @@ export default function ProfilePage() {
                                 </Dialog>
                             </div>
                             <CardDescription className="text-muted-foreground">ID: #{userAccount.numericId}</CardDescription>
+                            <div className="flex items-center justify-center gap-2 mt-2 text-lg font-semibold text-primary">
+                                <Star className="w-5 h-5 fill-current" />
+                                <span>Nível {userProfile.level}</span>
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-8 px-4 md:px-6 pb-6">
+                        <div>
+                            <div className="flex justify-between items-center mb-1 text-xs text-muted-foreground">
+                                <span>Progresso</span>
+                                <span>{userProfile.xp} / 100 XP</span>
+                            </div>
+                            <Progress value={xpProgress} className="h-2" />
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                              <div className="flex items-center gap-3 bg-card p-3 rounded-lg">
                                 <Mail className="w-5 h-5 text-muted-foreground" />
@@ -247,3 +260,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    

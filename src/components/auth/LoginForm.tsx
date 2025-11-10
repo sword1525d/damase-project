@@ -77,7 +77,9 @@ export function LoginForm() {
                 await setDoc(userProfileDocRef, {
                     id: 'main',
                     displayName: user.displayName || user.email,
-                    avatarUrl: user.photoURL
+                    avatarUrl: user.photoURL,
+                    level: 1,
+                    xp: 0
                 }, { merge: true });
             }
             router.push("/dashboard");
@@ -151,3 +153,5 @@ export function LoginForm() {
     </Card>
   );
 }
+
+    

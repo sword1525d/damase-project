@@ -2,7 +2,7 @@
 import { PlayerInfo } from "./PlayerInfo";
 import { CheckersBoard } from "./CheckersBoard";
 import { useFirestore, useDoc, useUser, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { doc, getDoc, runTransaction } from "firebase/firestore";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
@@ -18,8 +18,40 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+const XP_PER_WIN = 25;
+const XP_PER_LEVEL = 100;
+
+async function awardXp(firestore: any, winnerId: string) {
+    if (!winnerId) return;
+
+    const userProfileRef = doc(firestore, `users/${winnerId}/profile`, "main");
+
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const userProfileDoc = await transaction.get(userProfileRef);
+            if (!userProfileDoc.exists()) {
+                throw "Document does not exist!";
+            }
+
+            const currentLevel = userProfileDoc.data().level || 1;
+            const currentXp = userProfileDoc.data().xp || 0;
+
+            let newXp = currentXp + XP_PER_WIN;
+            let newLevel = currentLevel;
+
+            if (newXp >= XP_PER_LEVEL) {
+                newLevel += 1;
+                newXp -= XP_PER_LEVEL;
+            }
+            
+            transaction.update(userProfileRef, { level: newLevel, xp: newXp });
+        });
+    } catch (e) {
+        console.error("XP transaction failed: ", e);
+    }
+}
 
 
 export function GameArea({ gameId }: { gameId: string }) {
@@ -56,6 +88,13 @@ export function GameArea({ gameId }: { gameId: string }) {
         }
     }
   }, [gameSessionRef, user, gameSession?.status]);
+
+  // Award XP on game completion
+  useEffect(() => {
+      if(gameSession?.status === 'completed' && gameSession.winnerId) {
+        awardXp(firestore, gameSession.winnerId);
+      }
+  }, [gameSession?.status, gameSession?.winnerId, firestore])
 
 
   const player1Id = gameSession?.player1Id;
@@ -131,6 +170,7 @@ export function GameArea({ gameId }: { gameId: string }) {
                     <h2 className="text-3xl font-bold">
                         {isDraw ? "Empate!" : isWinner ? "Você Venceu!" : "Você Perdeu!"}
                     </h2>
+                     {isWinner && <p className="text-primary font-semibold">+25 XP</p>}
                     <p className="text-muted-foreground">A partida foi concluída.</p>
                 </div>
                 <Button onClick={() => router.push('/dashboard')}>Voltar para o Lobby</Button>
@@ -184,3 +224,5 @@ export function GameArea({ gameId }: { gameId: string }) {
     </div>
   );
 }
+
+    
