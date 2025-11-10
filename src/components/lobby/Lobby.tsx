@@ -13,7 +13,6 @@ export function Lobby({ onFriendMatchClick }: { onFriendMatchClick?: () => void 
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <CardTitle className="text-3xl font-bold">Partida</CardTitle>
-                    <CardDescription>Escolha como você quer jogar.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-4">
                      <Button className="w-full h-16 text-lg" size="lg" variant="outline" disabled>
