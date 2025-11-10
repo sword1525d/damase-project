@@ -196,6 +196,36 @@ export function GameArea({ gameId }: { gameId: string }) {
     );
   }
 
+  if (gameStatus === 'active' && areBothPlayersPresent) {
+    return (
+      <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 items-center justify-center relative">
+        <PlayerInfo playerId={user?.uid} opponentId={opponentId} gameSession={gameSession} />
+        <CheckersBoard gameSession={gameSession} gameSessionRef={gameSessionRef} />
+         <AlertDialog open={showForfeitDialog} onOpenChange={setShowForfeitDialog}>
+              <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="absolute bottom-4 right-4 lg:bottom-8 lg:right-8">
+                      <Flag className="w-4 h-4 mr-2" />
+                      Desistir
+                  </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Desistir da Partida?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          Você tem certeza que quer desistir? Isso contará como uma derrota em seu histórico.
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleForfeit} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                          Confirmar Desistência
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 items-center justify-center relative">
