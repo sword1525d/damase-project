@@ -1,10 +1,12 @@
+
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Crown } from 'lucide-react';
 import { updateDocumentNonBlocking, useUser } from '@/firebase';
 import type { DocumentReference } from 'firebase/firestore';
+import { BotMoveInput, getBotMove } from '@/ai/flows/bot-move-flow';
 
 type Piece = { player: 'p1' | 'p2'; isKing: boolean } | null;
 type Board = { [row: number]: { [col: number]: Piece } };
@@ -54,11 +56,15 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const [board, setBoard] = useState<Board>(gameSession?.board || generateInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isBotThinking, setIsBotThinking] = useState(false);
   const { user } = useUser();
 
+  const isBotGame = !!gameSession?.botPlayer;
+  const botPlayerKey = gameSession?.botPlayer?.playerKey;
+  const isBotTurn = isBotGame && gameSession?.turn === gameSession?.botPlayer?.id;
   const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
   const localPlayer = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
-  const isMyTurn = currentPlayer === localPlayer && gameSession?.status === 'active';
+  const isMyTurn = currentPlayer === localPlayer && gameSession?.status === 'active' && !isBotGame;
 
 
   useEffect(() => {
@@ -87,82 +93,8 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     if (p2Pieces === 0) return gameSession.player1Id;
     return null;
   }
-
-  const handleSquareClick = async (row: number, col: number) => {
-    if (!gameSessionRef || !isMyTurn) return;
-
-    const clickedPiece = board[row]?.[col];
-    const targetMove = possibleMoves.find(move => move.to.row === row && move.to.col === col);
-
-    if (selectedPiece && targetMove) {
-        const newBoard = JSON.parse(JSON.stringify(board)); // Deep copy
-        const pieceToMove = newBoard[selectedPiece.row][selectedPiece.col];
-
-        // Move piece
-        newBoard[row][col] = pieceToMove;
-        newBoard[selectedPiece.row][selectedPiece.col] = null;
-
-        // Handle capture
-        if (targetMove.capturedPiece) {
-            newBoard[targetMove.capturedPiece.row][targetMove.capturedPiece.col] = null;
-        }
-
-        // King me?
-        if (pieceToMove && ((pieceToMove.player === 'p1' && row === 7) || (pieceToMove.player === 'p2' && row === 0))) {
-            pieceToMove.isKing = true;
-            newBoard[row][col] = pieceToMove; // Update the piece on the new board
-        }
-        
-        const canCaptureAgain = targetMove.capturedPiece && calculatePossibleMoves({row, col}, newBoard).some(m => m.capturedPiece);
-        const nextTurn = canCaptureAgain ? gameSession.turn : (gameSession.turn === gameSession.player1Id ? gameSession.player2Id : gameSession.player1Id);
-
-        const winnerId = checkWinCondition(newBoard);
-        const gameUpdate: any = { board: newBoard, turn: nextTurn };
-        
-        if (gameSession.status !== 'active') {
-            gameUpdate.status = 'active';
-        }
-
-        if(winnerId){
-            gameUpdate.winnerId = winnerId;
-            gameUpdate.status = 'completed';
-            gameUpdate.endTime = new Date().toISOString();
-        }
-
-        await updateDocumentNonBlocking(gameSessionRef, gameUpdate);
-        setSelectedPiece(canCaptureAgain ? {row, col} : null);
-
-    } else if (clickedPiece && clickedPiece.player === localPlayer) {
-      // Force selection of capturing piece if available
-      const mandatoryMoves = getMandatoryMoves(board, localPlayer);
-      if (mandatoryMoves.length > 0 && !mandatoryMoves.some(m => m.piece.row === row && m.piece.col === col)) {
-        setSelectedPiece(mandatoryMoves[0].piece);
-      } else {
-        setSelectedPiece({ row, col });
-      }
-    } else {
-      setSelectedPiece(null);
-    }
-  };
-
-  const getMandatoryMoves = (currentBoard: Board, player: 'p1' | 'p2'): { piece: Position, moves: Move[] }[] => {
-      const allCaptureMoves: { piece: Position, moves: Move[] }[] = [];
-      for (let r = 0; r < 8; r++) {
-          for (let c = 0; c < 8; c++) {
-              const piece = currentBoard[r]?.[c];
-              if (piece && piece.player === player) {
-                  const moves = calculatePossibleMoves({ row: r, col: c }, currentBoard);
-                  const captureMoves = moves.filter(m => m.capturedPiece);
-                  if (captureMoves.length > 0) {
-                      allCaptureMoves.push({ piece: { row: r, col: c }, moves: captureMoves });
-                  }
-              }
-          }
-      }
-      return allCaptureMoves;
-  };
   
-    const calculatePossibleMoves = (piecePosition: Position, currentBoard: Board): Move[] => {
+    const calculatePossibleMoves = useCallback((piecePosition: Position, currentBoard: Board): Move[] => {
         if (!piecePosition) return [];
         const moves: Move[] = [];
         const { row, col } = piecePosition;
@@ -202,8 +134,90 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
             });
         }
         return moves;
-    };
-    
+    }, []);
+
+    const performMove = useCallback(async (piecePos: Position, move: Move, currentBoard: Board) => {
+        if (!gameSessionRef) return { newBoard: currentBoard, nextTurn: gameSession.turn };
+
+        const newBoard = JSON.parse(JSON.stringify(currentBoard));
+        const pieceToMove = newBoard[piecePos.row][piecePos.col];
+
+        newBoard[move.to.row][move.to.col] = pieceToMove;
+        newBoard[piecePos.row][piecePos.col] = null;
+
+        if (move.capturedPiece) {
+            newBoard[move.capturedPiece.row][move.capturedPiece.col] = null;
+        }
+
+        if (pieceToMove && ((pieceToMove.player === 'p1' && move.to.row === 7) || (pieceToMove.player === 'p2' && move.to.row === 0))) {
+            pieceToMove.isKing = true;
+        }
+
+        const canCaptureAgain = move.capturedPiece && calculatePossibleMoves(move.to, newBoard).some(m => m.capturedPiece);
+        const nextTurn = canCaptureAgain ? gameSession.turn : (gameSession.turn === gameSession.player1Id ? gameSession.player2Id : gameSession.player1Id);
+        
+        return { newBoard, nextTurn, pieceAtEnd: move.to };
+
+    }, [gameSessionRef, gameSession, calculatePossibleMoves]);
+
+
+  const handleSquareClick = async (row: number, col: number) => {
+    if (!gameSessionRef || !isMyTurn) return;
+
+    const clickedPiece = board[row]?.[col];
+    const targetMove = possibleMoves.find(move => move.to.row === row && move.to.col === col);
+
+    if (selectedPiece && targetMove) {
+        const { newBoard, nextTurn } = await performMove(selectedPiece, targetMove, board);
+        
+        const winnerId = checkWinCondition(newBoard);
+        const gameUpdate: any = { board: newBoard, turn: nextTurn };
+        
+        if (gameSession.status !== 'active') {
+            gameUpdate.status = 'active';
+        }
+
+        if(winnerId){
+            gameUpdate.winnerId = winnerId;
+            gameUpdate.status = 'completed';
+            gameUpdate.endTime = new Date().toISOString();
+        }
+
+        await updateDocumentNonBlocking(gameSessionRef, gameUpdate);
+        
+        const canCaptureAgain = targetMove.capturedPiece && calculatePossibleMoves({row, col}, newBoard).some(m => m.capturedPiece);
+        setSelectedPiece(canCaptureAgain ? {row, col} : null);
+
+    } else if (clickedPiece && clickedPiece.player === localPlayer) {
+      // Force selection of capturing piece if available
+      const mandatoryMoves = getMandatoryMoves(board, localPlayer);
+      if (mandatoryMoves.length > 0 && !mandatoryMoves.some(m => m.piece.row === row && m.piece.col === col)) {
+        setSelectedPiece(mandatoryMoves[0].piece);
+      } else {
+        setSelectedPiece({ row, col });
+      }
+    } else {
+      setSelectedPiece(null);
+    }
+  };
+
+  const getMandatoryMoves = (currentBoard: Board, player: 'p1' | 'p2'): { piece: Position, moves: Move[] }[] => {
+      const allCaptureMoves: { piece: Position, moves: Move[] }[] = [];
+      for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+              const piece = currentBoard[r]?.[c];
+              if (piece && piece.player === player) {
+                  const moves = calculatePossibleMoves({ row: r, col: c }, currentBoard);
+                  const captureMoves = moves.filter(m => m.capturedPiece);
+                  if (captureMoves.length > 0) {
+                      allCaptureMoves.push({ piece: { row: r, col: c }, moves: captureMoves });
+                  }
+              }
+          }
+      }
+      return allCaptureMoves;
+  };
+  
     const possibleMoves = useMemo(() => {
         if (!selectedPiece) return [];
         
@@ -217,7 +231,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
 
         return movesForSelectedPiece.filter(m => !m.capturedPiece);
 
-    }, [selectedPiece, board, localPlayer]);
+    }, [selectedPiece, board, localPlayer, calculatePossibleMoves]);
 
     useEffect(() => {
         if (isMyTurn) {
@@ -232,6 +246,85 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
             setSelectedPiece(null);
         }
     }, [isMyTurn, board, localPlayer]);
+    
+    // Bot move logic
+    useEffect(() => {
+        if (isBotTurn && gameSessionRef) {
+            
+            const runBotMove = async () => {
+                setIsBotThinking(true);
+                let currentBoard = board;
+                let botPlayerId = gameSession.turn;
+                let pieceToMoveAfterCapture: Position | null = null;
+
+                while(botPlayerId === gameSession.botPlayer.id) {
+                    const mandatoryMoves = getMandatoryMoves(currentBoard, botPlayerKey);
+                    let pieceToMove: Position;
+                    let movesForPiece: Move[];
+
+                    if (pieceToMoveAfterCapture) {
+                        pieceToMove = pieceToMoveAfterCapture;
+                        movesForPiece = calculatePossibleMoves(pieceToMove, currentBoard).filter(m => m.capturedPiece);
+                         if (movesForPiece.length === 0) break; 
+                    } else if (mandatoryMoves.length > 0) {
+                        const randomChoice = mandatoryMoves[Math.floor(Math.random() * mandatoryMoves.length)];
+                        pieceToMove = randomChoice.piece;
+                        movesForPiece = randomChoice.moves;
+                    } else {
+                        const allBotPieces: Position[] = [];
+                        for(let r = 0; r < 8; r++){
+                            for(let c = 0; c < 8; c++){
+                                if(currentBoard[r]?.[c]?.player === botPlayerKey) {
+                                    allBotPieces.push({row: r, col: c});
+                                }
+                            }
+                        }
+                        const piecesWithMoves = allBotPieces.map(p => ({piece: p, moves: calculatePossibleMoves(p, currentBoard).filter(m => !m.capturedPiece)})).filter(p => p.moves.length > 0);
+                        if(piecesWithMoves.length === 0) break; 
+                        const randomChoice = piecesWithMoves[Math.floor(Math.random() * piecesWithMoves.length)];
+                        pieceToMove = randomChoice.piece;
+                        movesForPiece = randomChoice.moves;
+                    }
+
+                    const botInput: BotMoveInput = {
+                        board: currentBoard,
+                        possibleMoves: movesForPiece,
+                        botPlayerKey: botPlayerKey,
+                        botPiecePosition: pieceToMove,
+                    };
+
+                    const response = await getBotMove(botInput);
+                    const bestMove = response.bestMove;
+
+                    const { newBoard, nextTurn, pieceAtEnd } = await performMove(pieceToMove, bestMove, currentBoard);
+                    currentBoard = newBoard;
+                    botPlayerId = nextTurn;
+                    pieceToMoveAfterCapture = (botPlayerId === gameSession.botPlayer.id && pieceAtEnd) ? pieceAtEnd : null;
+                    
+                    // Add a small delay between chained captures for visual effect
+                    if (botPlayerId === gameSession.botPlayer.id) {
+                       await updateDocumentNonBlocking(gameSessionRef, { board: currentBoard });
+                       await new Promise(resolve => setTimeout(resolve, 800));
+                    }
+                }
+                
+                const winnerId = checkWinCondition(currentBoard);
+                const gameUpdate: any = { board: currentBoard, turn: botPlayerId };
+                
+                if (winnerId) {
+                    gameUpdate.winnerId = winnerId;
+                    gameUpdate.status = 'completed';
+                    gameUpdate.endTime = new Date().toISOString();
+                }
+
+                await updateDocumentNonBlocking(gameSessionRef, gameUpdate);
+                setIsBotThinking(false);
+            };
+
+            // Delay bot move slightly for better UX
+            setTimeout(runBotMove, 1000);
+        }
+    }, [isBotTurn, board, botPlayerKey, gameSessionRef, performMove, calculatePossibleMoves, gameSession.botPlayer?.id]);
 
 
   if (!isClient) {
@@ -241,9 +334,10 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   }
 
   const renderBoard = boardMapToArray(board);
+  const effectiveTurn = isBotThinking ? false : isMyTurn;
 
   return (
-    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-stone-800 transition-all", !isMyTurn && "opacity-70")}>
+    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-stone-800 transition-all", !effectiveTurn && "opacity-70")}>
       <div className="grid grid-cols-8 grid-rows-8 w-full h-full bg-card">
         {renderBoard.map((row, rowIndex) =>
           row.map((piece, colIndex) => {
@@ -258,12 +352,12 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                 className={cn(
                   'flex items-center justify-center transition-colors duration-200',
                    isDark ? 'bg-[#8B4513]' : 'bg-[#DEB887]', // SaddleBrown and BurlyWood
-                  (isMyTurn && (piece || isMovable)) && 'cursor-pointer'
+                  (effectiveTurn && (piece || isMovable)) && 'cursor-pointer'
                 )}
                 role="button"
                 aria-label={`Board square ${rowIndex}, ${colIndex}`}
               >
-                {isMyTurn && isMovable && !piece && (
+                {effectiveTurn && isMovable && !piece && (
                     <div className="w-1/3 h-1/3 rounded-full bg-black/20 transition-opacity hover:bg-black/30" />
                 )}
                 {piece && (
@@ -271,7 +365,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                     className={cn(
                       'w-[80%] h-[80%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
                       piece.player === 'p1' ? 'bg-[#A0522D] border-4 border-[#6F381D]' : 'bg-[#D2B48C] border-4 border-[#B89C74]', // Sienna and Tan
-                      isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-blue-500 ring-offset-transparent'
+                      isSelected && effectiveTurn && 'ring-4 ring-offset-2 ring-blue-500 ring-offset-transparent'
                     )}
                   >
                     {piece.isKing && (

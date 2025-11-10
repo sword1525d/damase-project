@@ -21,7 +21,18 @@ const TURN_DURATION = 30; // 30 segundos
 function PlayerDetails({ userId, isPlayer, gameSession }: { userId?: string, isPlayer: boolean, gameSession: any }) {
   const firestore = useFirestore();
   const [timer, setTimer] = useState(TURN_DURATION);
-  const { data: user } = useDoc(useMemoFirebase(() => userId ? doc(firestore, `users/${userId}/profile`, 'main') : null, [firestore, userId]));
+  
+  const isBot = userId === 'checkers_bot';
+  const botProfile = gameSession?.botPlayer;
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!userId || isBot) return null;
+    return doc(firestore, `users/${userId}/profile`, 'main');
+  }, [firestore, userId, isBot]);
+
+  const { data: user } = useDoc(userProfileRef);
+
+  const profile = isBot ? botProfile : user;
   
   const isMyTurn = gameSession.turn === userId;
   const areBothPlayersPresent = !!(gameSession?.presentPlayers?.[gameSession.player1Id] && gameSession?.presentPlayers?.[gameSession.player2Id]);
@@ -69,7 +80,11 @@ function PlayerDetails({ userId, isPlayer, gameSession }: { userId?: string, isP
 
   const timerProgress = (timer / TURN_DURATION) * 100;
   const turnStatus = isMyTurn ? "Sua vez" : "Aguardando...";
-  const displayName = isPlayer ? 'Você' : user?.displayName || 'Oponente';
+  let displayName = isPlayer ? 'Você' : profile?.displayName || 'Oponente';
+  if (isBot) {
+    displayName = botProfile?.displayName || 'CheckersBot';
+  }
+
 
   return (
     <div className={`flex flex-col gap-2 ${isPlayer ? 'items-end' : 'items-start'}`}>
@@ -79,12 +94,12 @@ function PlayerDetails({ userId, isPlayer, gameSession }: { userId?: string, isP
                     "w-12 h-12 md:w-16 md:h-16 border-2",
                     isMyTurn ? 'border-primary' : 'border-muted'
                     )}>
-                <AvatarImage src={user?.avatarUrl} alt={displayName} data-ai-hint="avatar" />
+                <AvatarImage src={profile?.avatarUrl} alt={displayName} data-ai-hint="avatar" />
                 <AvatarFallback>{displayName?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
-                {user?.level && (
+                {profile?.level && (
                     <Badge variant="secondary" className="absolute -bottom-1 -right-1 h-6 w-6 p-0 justify-center text-xs rounded-full border-2 border-card">
-                        {user.level}
+                        {profile.level}
                     </Badge>
                 )}
             </div>
