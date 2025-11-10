@@ -22,14 +22,14 @@ export default function DashboardPage() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <LoadingAnimation />
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)]">
+    <div className="h-full">
       <div className="grid h-full grid-cols-1 lg:grid-cols-[1fr_3fr]">
         <aside className="hidden lg:block border-r">
           <FriendsList />
