@@ -70,6 +70,23 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     }
   }, [gameSession]);
 
+  const checkWinCondition = (currentBoard: Board) => {
+    let p1Pieces = 0;
+    let p2Pieces = 0;
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const piece = currentBoard[r]?.[c];
+            if (piece) {
+                if (piece.player === 'p1') p1Pieces++;
+                else p2Pieces++;
+            }
+        }
+    }
+    if (p1Pieces === 0) return gameSession.player2Id;
+    if (p2Pieces === 0) return gameSession.player1Id;
+    return null;
+  }
+
   const handleSquareClick = (row: number, col: number) => {
     if (!gameSessionRef) return;
     if (currentPlayer !== localPlayer) return;
@@ -99,7 +116,15 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
         const canCaptureAgain = targetMove.capturedPiece && calculatePossibleMoves({row, col}, newBoard).some(m => m.capturedPiece);
         const nextTurn = canCaptureAgain ? gameSession.turn : (gameSession.turn === gameSession.player1Id ? gameSession.player2Id : gameSession.player1Id);
 
-        updateDocumentNonBlocking(gameSessionRef, { board: newBoard, turn: nextTurn });
+        const winnerId = checkWinCondition(newBoard);
+        const gameUpdate: any = { board: newBoard, turn: nextTurn };
+        if(winnerId){
+            gameUpdate.winnerId = winnerId;
+            gameUpdate.status = 'completed';
+            gameUpdate.endTime = new Date().toISOString();
+        }
+
+        updateDocumentNonBlocking(gameSessionRef, gameUpdate);
         setSelectedPiece(canCaptureAgain ? {row, col} : null);
 
     } else if (clickedPiece && clickedPiece.player === localPlayer) {

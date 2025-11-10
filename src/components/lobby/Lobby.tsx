@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameInvites } from "@/components/lobby/GameInvites";
 import { Swords } from "lucide-react";
+import { RecentGames } from "./RecentGames";
 
 export function Lobby() {
     return (
@@ -21,6 +22,10 @@ export function Lobby() {
                     <p className="text-center text-sm text-muted-foreground">Ou convide um amigo da lista à esquerda.</p>
                 </CardContent>
             </Card>
+
+            <div className="w-full max-w-md mt-8">
+                <RecentGames />
+            </div>
         </div>
     )
 }
