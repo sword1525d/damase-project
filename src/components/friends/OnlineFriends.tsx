@@ -8,6 +8,7 @@ import { Gamepad2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useMemo } from 'react';
 
 export function OnlineFriends() {
     const firestore = useFirestore();
@@ -15,18 +16,35 @@ export function OnlineFriends() {
     const router = useRouter();
     const { toast } = useToast();
 
-    const friendsQuery = useMemoFirebase(() => {
+    const friendsQuery1 = useMemoFirebase(() => {
         if(!user) return null;
         return query(
             collection(firestore, 'friendships'),
-            where('members', 'array-contains', user.uid),
+            where('user1Id', '==', user.uid),
             where('status', '==', 'accepted')
         );
     }, [firestore, user]);
 
-    const { data: friendships, isLoading } = useCollection(friendsQuery);
+    const friendsQuery2 = useMemoFirebase(() => {
+        if(!user) return null;
+        return query(
+            collection(firestore, 'friendships'),
+            where('user2Id', '==', user.uid),
+            where('status', '==', 'accepted')
+        );
+    }, [firestore, user]);
 
-    const friendIds = friendships?.map(f => f.user1Id === user?.uid ? f.user2Id : f.user1Id);
+    const { data: friendships1, isLoading: isLoading1 } = useCollection(friendsQuery1);
+    const { data: friendships2, isLoading: isLoading2 } = useCollection(friendsQuery2);
+
+    const friendIds = useMemo(() => {
+        if (!friendships1 || !friendships2) return [];
+        const ids1 = friendships1.map(f => f.user2Id);
+        const ids2 = friendships2.map(f => f.user1Id);
+        return [...new Set([...ids1, ...ids2])];
+    }, [friendships1, friendships2]);
+
+    const isLoading = isLoading1 || isLoading2;
 
     const handleInvite = async (friendId: string) => {
         if (!user) return;
