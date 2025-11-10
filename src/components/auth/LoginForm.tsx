@@ -117,7 +117,7 @@ export function LoginForm() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="player@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
+            <Input id="email" type="email" placeholder="jogador@exemplo.com" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
@@ -143,7 +143,7 @@ export function LoginForm() {
       <CardFooter className="flex-col gap-4 items-center justify-center text-sm">
         <div className="text-center text-sm text-muted-foreground">
             Não tem uma conta?{" "}
-            <Link href="/register" className="underline text-accent-foreground hover:text-accent/90">
+            <Link href="/register" className="underline text-primary hover:text-primary/90">
                 Cadastre-se
             </Link>
         </div>

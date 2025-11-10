@@ -108,7 +108,7 @@ export function RegisterForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="player@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
+            <Input id="email" type="email" placeholder="jogador@exemplo.com" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
@@ -119,7 +119,7 @@ export function RegisterForm() {
           <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Criar Conta</Button>
           <div className="text-center text-sm text-muted-foreground">
             Já tem uma conta?{" "}
-            <Link href="/" className="underline text-accent-foreground hover:text-accent/90">
+            <Link href="/" className="underline text-primary hover:text-primary/90">
               Entrar
             </Link>
           </div>
