@@ -181,22 +181,7 @@ export function GameArea({ gameId }: { gameId: string }) {
     )
   }
 
-  if (gameStatus === 'ready' && areBothPlayersPresent) {
-     return (
-        <div className="flex-1 flex items-center justify-center text-center p-4">
-            <div className="flex flex-col items-center gap-6">
-                <Play className="w-24 h-24 text-primary" strokeWidth={1} />
-                 <div className="space-y-2">
-                    <h2 className="text-3xl font-bold">Pronto para jogar!</h2>
-                    <p className="text-muted-foreground">O jogador 1 começa a partida.</p>
-                </div>
-                <PlayerInfo playerId={user?.uid} opponentId={opponentId} gameSession={gameSession} />
-            </div>
-        </div>
-    );
-  }
-
-  if (gameStatus === 'active') {
+  if (gameStatus === 'ready' || gameStatus === 'active') {
     return (
       <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 items-center justify-center relative">
         <PlayerInfo playerId={user?.uid} opponentId={opponentId} gameSession={gameSession} />
