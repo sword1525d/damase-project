@@ -2,6 +2,7 @@ import { AddFriendDialog } from "@/components/friends/AddFriendDialog";
 import { FriendRequests } from "@/components/friends/FriendRequests";
 import { OnlineFriends } from "@/components/friends/OnlineFriends";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 export function FriendsList() {
   return (
@@ -12,7 +13,7 @@ export function FriendsList() {
           <AddFriendDialog />
         </div>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className={cn("flex-1", "hide-scrollbar")}>
         <FriendRequests />
         <OnlineFriends />
       </ScrollArea>

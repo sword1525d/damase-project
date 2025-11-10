@@ -7,6 +7,7 @@ import { useCollection, useFirestore, useUser, addDocumentNonBlocking, useMemoFi
 import { collection, query, orderBy } from "firebase/firestore";
 import { Send, Smile } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
   const [newMessage, setNewMessage] = useState('');
@@ -57,7 +58,7 @@ export function Chat({ gameSessionId }: { gameSessionId: string | null }) {
       <div className="p-4">
         <h2 className="text-xl font-semibold">Chat da Partida</h2>
       </div>
-      <ScrollArea className="flex-1 p-4" viewportRef={scrollAreaRef}>
+      <ScrollArea className={cn("flex-1 p-4", "hide-scrollbar")} viewportRef={scrollAreaRef}>
         <div className="space-y-4">
             {messages?.map(msg => (
                  <div key={msg.id} className={`flex items-start gap-3 ${msg.senderId === user?.uid ? 'flex-row-reverse' : ''}`}>
