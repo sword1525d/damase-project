@@ -64,7 +64,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const isBotTurn = isBotGame && gameSession?.turn === gameSession?.botPlayer?.id;
   const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
   const localPlayer = gameSession?.player1Id === user?.uid ? 'p1' : 'p2';
-  const isMyTurn = currentPlayer === localPlayer && gameSession?.status === 'active' && !isBotGame;
+  const isMyTurn = (gameSession?.status === 'active' || gameSession?.status === 'ready') && currentPlayer === localPlayer && !isBotGame;
 
 
   useEffect(() => {
@@ -173,7 +173,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
         const winnerId = checkWinCondition(newBoard);
         const gameUpdate: any = { board: newBoard, turn: nextTurn };
         
-        if (gameSession.status !== 'active') {
+        if (gameSession.status === 'ready') {
             gameUpdate.status = 'active';
         }
 
@@ -257,6 +257,12 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                 let botPlayerId = gameSession.turn;
                 let pieceToMoveAfterCapture: Position | null = null;
 
+                // Make the first move to transition status from 'ready' to 'active'
+                if (gameSession.status === 'ready') {
+                    const firstMoveUpdate: any = { status: 'active' };
+                    await updateDocumentNonBlocking(gameSessionRef, firstMoveUpdate);
+                }
+
                 while(botPlayerId === gameSession.botPlayer.id) {
                     const mandatoryMoves = getMandatoryMoves(currentBoard, botPlayerKey);
                     let pieceToMove: Position;
@@ -324,7 +330,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
             // Delay bot move slightly for better UX
             setTimeout(runBotMove, 1000);
         }
-    }, [isBotTurn, board, botPlayerKey, gameSessionRef, performMove, calculatePossibleMoves, gameSession.botPlayer?.id]);
+    }, [isBotTurn, board, botPlayerKey, gameSessionRef, performMove, calculatePossibleMoves, gameSession.botPlayer?.id, gameSession.status]);
 
 
   if (!isClient) {
@@ -386,3 +392,5 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
     </div>
   );
 }
+
+    
