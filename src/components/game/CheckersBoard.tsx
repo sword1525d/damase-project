@@ -54,7 +54,6 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const [board, setBoard] = useState<Board>(gameSession?.board || generateInitialBoard());
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [forcedCaptureMoves, setForcedCaptureMoves] = useState<Move[]>([]);
   const { user } = useUser();
 
   const currentPlayer = gameSession?.turn === gameSession?.player1Id ? 'p1' : 'p2';
@@ -101,7 +100,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
         const nextTurn = canCaptureAgain ? gameSession.turn : (gameSession.turn === gameSession.player1Id ? gameSession.player2Id : gameSession.player1Id);
 
         updateDocumentNonBlocking(gameSessionRef, { board: newBoard, turn: nextTurn });
-        setSelectedPiece(null);
+        setSelectedPiece(canCaptureAgain ? {row, col} : null);
 
     } else if (clickedPiece && clickedPiece.player === localPlayer) {
       setSelectedPiece({ row, col });
@@ -172,6 +171,10 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
         const movesForSelectedPiece = calculatePossibleMoves(selectedPiece, board);
         if(allCaptureMoves.length > 0){
             const capturesForSelected = allCaptureMoves.find(p => p.piece.row === selectedPiece.row && p.piece.col === selectedPiece.col);
+            if (!capturesForSelected) {
+              setSelectedPiece(allCaptureMoves[0].piece);
+              return allCaptureMoves[0].moves;
+            }
             return capturesForSelected ? capturesForSelected.moves : [];
         }
 
@@ -190,7 +193,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
   const renderBoard = boardMapToArray(board);
 
   return (
-    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-neutral-800 transition-all", !isMyTurn && "opacity-70")}>
+    <div className={cn("w-full aspect-square max-w-2xl shadow-2xl rounded-lg overflow-hidden border-4 border-stone-800 transition-all", !isMyTurn && "opacity-70")}>
       <div className="grid grid-cols-8 grid-rows-8 w-full h-full bg-card">
         {renderBoard.map((row, rowIndex) =>
           row.map((piece, colIndex) => {
@@ -204,7 +207,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                 onClick={() => handleSquareClick(rowIndex, colIndex)}
                 className={cn(
                   'flex items-center justify-center transition-colors duration-200',
-                   isDark ? 'bg-neutral-800' : 'bg-neutral-200',
+                   isDark ? 'bg-[#8B4513]' : 'bg-[#DEB887]', // SaddleBrown and BurlyWood
                   (isMyTurn && (piece || isMovable)) && 'cursor-pointer'
                 )}
                 role="button"
@@ -217,7 +220,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                   <div
                     className={cn(
                       'w-[80%] h-[80%] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ease-in-out',
-                      piece.player === 'p1' ? 'bg-zinc-800 border-4 border-zinc-950' : 'bg-stone-300 border-4 border-stone-400',
+                      piece.player === 'p1' ? 'bg-[#A0522D] border-4 border-[#6F381D]' : 'bg-[#D2B48C] border-4 border-[#B89C74]', // Sienna and Tan
                       isSelected && isMyTurn && 'ring-4 ring-offset-2 ring-blue-500 ring-offset-transparent'
                     )}
                   >
@@ -225,7 +228,7 @@ export function CheckersBoard({ gameSession, gameSessionRef }: { gameSession: an
                       <Crown
                         className={cn(
                           'w-1/2 h-1/2',
-                          piece.player === 'p1' ? 'text-yellow-400' : 'text-yellow-600'
+                          piece.player === 'p1' ? 'text-yellow-400' : 'text-yellow-200'
                         )}
                       />
                     )}
