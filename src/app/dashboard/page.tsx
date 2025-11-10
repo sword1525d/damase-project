@@ -22,20 +22,20 @@ export default function DashboardPage() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="min-h-[calc(100vh-10rem)] flex items-center justify-center">
         <LoadingAnimation />
       </div>
     );
   }
 
   return (
-    <div className="h-full">
-      <div className="grid h-full grid-cols-1 lg:grid-cols-[1fr_3fr]">
-        <aside className="hidden lg:block">
+    <div>
+      <div className="grid lg:grid-cols-[1fr_3fr]">
+        <aside className="hidden lg:block border-r">
           <FriendsList />
         </aside>
 
-        <section className="flex flex-col overflow-auto relative p-4 md:px-8 md:pt-12 md:pb-8">
+        <section className="flex flex-col relative p-4 md:px-8 md:pt-12 md:pb-8 justify-center min-h-[calc(100vh-8rem)]">
           <MobileNav isFriendsSheetOpen={isFriendsSheetOpen} onFriendsSheetChange={setIsFriendsSheetOpen} />
           <Lobby onFriendMatchClick={() => setIsFriendsSheetOpen(true)} />
         </section>

@@ -16,8 +16,8 @@ export default function DashboardLayout({
 }) {
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <header className="flex-shrink-0 sticky top-0 z-40 flex h-16 items-center gap-4 bg-background/80 px-4 backdrop-blur-sm md:px-6">
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="flex-shrink-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <Image src="/icon.svg" alt="Dama-se logo" width={24} height={24} className="h-6 w-6" />
           <span className="text-lg whitespace-nowrap">Dama-se</span>
@@ -27,7 +27,7 @@ export default function DashboardLayout({
           <UserDropdown />
         </div>
       </header>
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1">{children}</main>
       <footer className="flex-shrink-0 py-4 px-8 text-center text-xs text-muted-foreground">
         by LUCAS LIMA
       </footer>
