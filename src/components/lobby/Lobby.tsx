@@ -27,7 +27,7 @@ export function Lobby() {
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Button className="w-full h-16 text-lg" size="lg" variant="outline">
                         <Swords className="mr-2 h-6 w-6" />
-                        Partida Aleatória
+                        Casual
                     </Button>
                      <Button className="w-full h-16 text-lg" size="lg" onClick={handleFriendMatchClick}>
                         <Users className="mr-2 h-6 w-6" />
