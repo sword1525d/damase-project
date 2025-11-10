@@ -31,11 +31,11 @@ export default function DashboardPage() {
   return (
     <div className="h-full">
       <div className="grid h-full grid-cols-1 lg:grid-cols-[1fr_3fr]">
-        <aside className="hidden lg:block border-r">
+        <aside className="hidden lg:block">
           <FriendsList />
         </aside>
 
-        <section className="flex flex-col overflow-auto relative p-4 md:p-8">
+        <section className="flex flex-col overflow-auto relative p-4 md:px-8 md:pt-12 md:pb-8">
           <MobileNav isFriendsSheetOpen={isFriendsSheetOpen} onFriendsSheetChange={setIsFriendsSheetOpen} />
           <Lobby onFriendMatchClick={() => setIsFriendsSheetOpen(true)} />
         </section>
