@@ -85,6 +85,10 @@ export function OnlineFriends() {
             members: {
                 [user.uid]: true,
                 [friendId]: true,
+            },
+            presentPlayers: {
+                [user.uid]: false,
+                [friendId]: false,
             }
         };
 
